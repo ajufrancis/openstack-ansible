@@ -1,0 +1,120 @@
+---
+
+- name: Add cleanup to cron
+  lineinfile: dest={{ keystone_cron_file }}
+              regexp="token_flush"
+              insertafter=EOF
+              line="@hourly /usr/bin/keystone-manage token_flush >/var/log/keystone/keystone-tokenflush.log 2>&1"
+              state=present
+              create=yes
+
+- name: Create admin user
+  shell: creates={{ keystone_admin_user_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=admin --pass={{ admin_pass }} --email=admin_email@example.com
+- name: Mark admin user as created
+  lineinfile: dest={{ keystone_admin_user_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create admin role
+  shell: creates={{ keystone_admin_role_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} role-create --name=admin
+- name: Mark admin role as created
+  lineinfile: dest={{ keystone_admin_role_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create admin tenant
+  shell: creates={{ keystone_admin_tenant_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} tenant-create --name=admin --description="Admin Tenant"
+- name: Mark admin tenant as created
+  lineinfile: dest={{ keystone_admin_tenant_created }}
+              line=done
+              state=present
+              create=yes
+
+
+- name: Add admin admin role
+  shell: creates={{ keystone_admin_admin_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=admin --tenant=admin --role=admin
+- name: Mark admin admin roll as added
+  lineinfile: dest={{ keystone_admin_admin_role }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add admin member role
+  shell: creates={{ keystone_admin_member_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=admin --tenant=admin --role=_member_
+- name: Mark admin member roll as added
+  lineinfile: dest={{ keystone_admin_member_role }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create demo user
+  shell: creates={{ keystone_demo_user_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=demo --pass={{ demo_pass }} --email=demo_email@example.com
+- name: Mark demo user as created
+  lineinfile: dest={{ keystone_demo_user_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create demo tenant
+  shell: creates={{ keystone_demo_tenant_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} tenant-create --name=demo --description="Demo Tenant"
+- name: Mark demo tenant as created
+  lineinfile: dest={{ keystone_demo_tenant_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add demo member role
+  shell: creates={{ keystone_demo_member_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=demo --tenant=demo --role=_member_
+- name: Mark demo member roll as added
+  lineinfile: dest={{ keystone_demo_member_role }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create service tenant
+  shell: creates={{ keystone_service_tenant_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} tenant-create --name=service --description="Service Tenant"
+- name: Mark service tenant as created
+  lineinfile: dest={{ keystone_service_tenant_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create identity service
+  shell: creates={{ keystone_service_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=keystone --type=identity --description="OpenStack Identity"
+- name: Mark identity service as created
+  lineinfile: dest={{ keystone_service_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Get the identity service id
+  shell: creates={{ keystone_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ identity / {print $2}'
+  register: keystone_service_id
+- name: Create identity endpoint
+  shell: creates={{ keystone_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ keystone_service_id['stdout_lines'][0] }} --publicurl=http://controller:5000/v2.0 --internalurl=http://controller:5000/v2.0 --adminurl=http://controller:35357/v2.0
+- name: Mark identity endpoint as created
+  lineinfile: dest={{ keystone_endpoint_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create admin openrc file
+  template: src=admin-openrc.sh.j2 dest=/home/{{ remote_user }}/admin-openrc.sh
+
+- name: Create demo openrc file
+  template: src=demo-openrc.sh.j2 dest=/home/{{ remote_user }}/demo-openrc.sh
+

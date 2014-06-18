@@ -1,0 +1,73 @@
+---
+
+- name: Create glance user
+  shell: creates={{ glance_user_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=glance --pass={{ glance_pass }} --email=glance_email@example.com
+- name: Mark glance user as created
+  lineinfile: dest={{ glance_user_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add glance admin role
+  shell: creates={{ glance_admin_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=glance --tenant=service --role=admin
+- name: Mark glance admin roll as added
+  lineinfile: dest={{ glance_admin_role }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create image service
+  shell: creates={{ glance_service_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=glance --type=image --description="OpenStack Image Service"
+- name: Mark image service as created
+  lineinfile: dest={{ glance_service_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Get the image service id
+  shell: creates={{ glance_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ image / {print $2}'
+  register: glance_service_id
+- name: Create image endpoint
+  shell: creates={{ glance_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ glance_service_id['stdout_lines'][0] }} --publicurl=http://controller:9292 --internalurl=http://controller:9292 --adminurl=http://controller:9292
+- name: Mark image endpoint as created
+  lineinfile: dest={{ glance_endpoint_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Make sure we have an image directory
+  file: dest={{ glance_image_dir }}
+        state=directory
+        owner={{ remote_user }}
+        group={{ remote_user }}
+        mode=0775
+
+- name: Download cirros image
+  command: creates={{ glance_cirros_image }}
+           wget http://cdn.download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img -O {{ glance_cirros_image }}
+- name: Upload cirros image
+  shell: creates={{ glance_cirros_uploaded }}
+         /usr/bin/glance --os-username=admin --os-password={{ admin_pass}} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} image-create --name "cirros" --disk-format qcow2 --container-format bare --is-public True --progress < {{ glance_cirros_image }}
+- name: Mark cirrus image uploaded
+  lineinfile: dest={{ glance_cirros_uploaded }}
+              line=done
+              state=present
+              create=yes
+
+- name: Download ubuntu image
+  command: creates={{ glance_ubuntu_image }}
+           wget https://cloud-images.ubuntu.com/trusty/current/trusty-server-cloudimg-amd64-disk1.img -O {{ glance_ubuntu_image }}
+- name: Upload ubuntu image
+  shell: creates={{ glance_ubuntu_uploaded }}
+         /usr/bin/glance --os-username=admin --os-password={{ admin_pass}} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} image-create --name "ubuntu" --disk-format qcow2 --container-format bare --is-public True --progress < {{ glance_ubuntu_image }}
+- name: Mark cirrus image uploaded
+  lineinfile: dest={{ glance_ubuntu_uploaded }}
+              line=done
+              state=present
+              create=yes
+

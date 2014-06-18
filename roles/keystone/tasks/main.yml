@@ -1,0 +1,4 @@
+---
+- include: keystone_install.yml
+- include: keystone_setup_db.yml
+- include: keystone_init.yml

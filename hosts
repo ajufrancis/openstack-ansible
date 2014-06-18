@@ -1,0 +1,11 @@
+[controller]
+10.40.10.210
+
+[network]
+#10.40.10.220
+
+[compute]
+10.40.10.230
+
+[db:children]
+controller

@@ -1,0 +1,51 @@
+---
+
+- name: Install keystone Identity service
+  apt: name={{ item }} state=present
+  with_items:
+   - keystone
+
+- name: Remove sqllite db
+  file: path=/var/lib/keystone/keystone.db
+        state=absent
+
+- name: Debug vars
+  debug: var=conf_file
+- name: Make sure default section exists in conf files
+  lineinfile: dest={{ item }}
+              regexp="^(\[default\]|\[DEFAULT\])$"
+              insertbefore=BOF
+              line=[DEFAULT]
+              backup=yes
+              create=yes
+  with_items:
+  - "{{ conf_file }}"
+
+- name: Configure db conn
+  ini_file: dest={{ item[0] }}
+            section=database
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: connection, value: "mysql://keystone:{{ keystone_dbpass }}@controller/keystone"},
+    ]
+
+- name: Configure keystone options
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: admin_token, value: "{{ keystone_admin_token }}"},
+    {option: log_dir, value: /var/log/keystone},
+    ]
+
+- name: restart keystone
+  service: name=keystone state=restarted
+

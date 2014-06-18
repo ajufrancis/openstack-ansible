@@ -1,0 +1,85 @@
+---
+
+- name: Install glance Image service
+  apt: name={{ item }} state=present
+  with_items:
+  - glance
+  - python-glanceclient
+
+- name: Remove sqllite db
+  file: path=/var/lib/glance/glance.db
+        state=absent
+
+- name: Make sure default section exists in conf files
+  lineinfile: dest={{ item }}
+              regexp="^(\[default\]|\[DEFAULT\])$"
+              insertbefore=BOF
+              line=[DEFAULT]
+              backup=yes
+              create=yes
+  with_items:
+  - "{{ conf_file }}"
+  - "{{ conf2_file }}"
+
+- name: Configure db conn
+  ini_file: dest={{ item[0] }}
+            section=database
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}", "{{ conf2_file }}"]
+  - [
+    {option: connection, value: "mysql://glance:{{ glance_dbpass }}@controller/glance"},
+    ]
+
+- name: Configure rabbit rpc
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: rpc_backend, value: rabbit},
+    {option: rabbit_host, value: controller},
+    {option: rabbit_password, value: "{{ rabbit_pass }}"},
+    ]
+
+- name: Configure keystone authtoken
+  ini_file: dest={{ item[0] }}
+            section=keystone_authtoken
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}", "{{ conf2_file }}"]
+  - [
+    {option: auth_uri, value: "http://controller:5000"},
+    {option: auth_host, value: controller},
+    {option: auth_port, value: 35357},
+    {option: auth_protocol, value: http},
+    {option: admin_tenant_name, value: service},
+    {option: admin_user, value: glance},
+    {option: admin_password, value: "{{ glance_pass }}"},
+    ]
+
+- name: Configure paste deploy
+  ini_file: dest={{ item[0] }}
+            section=paste_deploy
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}", "{{ conf2_file }}"]
+  - [
+    {option: flavor, value: keystone},
+    ]
+
+- name: restart glance
+  service: name={{ item }} state=restarted
+  with_items:
+  - glance-registry
+  - glance-api
+

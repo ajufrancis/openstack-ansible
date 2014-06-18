@@ -16,8 +16,8 @@ git clone https://github.com/peterstac/openstack-ansible.git
 
 ## Setup the variables (at a minimum the ip addresses for your install)
 
-vi /path/to/config.file
+vi group_vars/all
 
 ## Start the install
 
-./install_os.sh
+./install.sh all

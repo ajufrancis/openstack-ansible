@@ -1,0 +1,106 @@
+---
+
+- name: Install nova Compute service on controller
+  apt: name={{ item }} state=present
+  with_items:
+  - nova-api
+  - nova-cert
+  - nova-conductor
+  - nova-consoleauth
+  - nova-novncproxy
+  - nova-scheduler
+  - python-novaclient
+
+- name: Remove sqllite db
+  file: path=/var/lib/nova/nova.sqlite
+        state=absent
+
+- name: Make sure default section exists in conf files
+  lineinfile: dest={{ item }}
+              regexp="^(\[default\]|\[DEFAULT\])$"
+              insertbefore=BOF
+              line=[DEFAULT]
+              backup=yes
+              create=yes
+  with_items:
+  - "{{ conf_file }}"
+
+- name: Configure db conn
+  ini_file: dest={{ item[0] }}
+            section=database
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: connection, value: "mysql://nova:{{ nova_dbpass }}@controller/nova"},
+    ]
+
+- name: Configure rabbit rpc
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: rpc_backend, value: rabbit},
+    {option: rabbit_host, value: controller},
+    {option: rabbit_password, value: "{{ rabbit_pass }}"},
+    ]
+
+- name: Configure IPs
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: my_ip, value: "{{ controller_mgmt_ip }}"},
+    {option: vncserver_listen, value: "{{ controller_mgmt_ip }}"},
+    {option: vncserver_proxyclient_address, value: "{{ controller_mgmt_ip }}"},
+    ]
+
+- name: Configure keystone authtoken
+  ini_file: dest={{ item[0] }}
+            section=keystone_authtoken
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: auth_uri, value: "http://controller:5000"},
+    {option: auth_host, value: controller},
+    {option: auth_port, value: 35357},
+    {option: auth_protocol, value: http},
+    {option: admin_tenant_name, value: service},
+    {option: admin_user, value: nova},
+    {option: admin_password, value: "{{ nova_pass }}"},
+    ]
+
+- name: Configure strategy
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: auth_strategy, value: keystone},
+    ]
+
+- name: restart nova
+  service: name={{ item }} state=restarted
+  with_items:
+  - nova-cert
+  - nova-consoleauth
+  - nova-scheduler
+  - nova-conductor
+  - nova-novncproxy
+

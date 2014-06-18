@@ -1,0 +1,7 @@
+---
+
+conf_dir: "{{ nova_conf_dir }}"
+
+conf_name: nova.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+

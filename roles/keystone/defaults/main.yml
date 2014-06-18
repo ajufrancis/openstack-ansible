@@ -1,0 +1,9 @@
+---
+
+conf_dir: "{{ keystone_conf_dir }}"
+
+conf_name: keystone.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+
+keystone_cron_file: /var/spool/cron/crontabs/keystone
+

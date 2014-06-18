@@ -1,0 +1,55 @@
+---
+# This playbook deploys the entire OpenStack install
+
+- name: Setup and Configure Common Elements
+  hosts: all
+  user: "{{ remote_user }}"
+  tags: common
+
+  roles:
+    - common
+
+- name: Deploy and Configure the OS Database
+  hosts: db
+  user: "{{ remote_user }}"
+  tags: db
+
+  roles:
+    - db
+
+- name: Deploy and Configure the Identity Service
+  hosts: controller
+  user: "{{ remote_user }}"
+  tags: keystone
+
+  roles:
+    - keystone
+
+- name: Deploy and Configure the Image Service
+  hosts: controller
+  user: "{{ remote_user }}"
+  tags: glance
+
+  roles:
+    - glance
+
+- name: Deploy and Configure the Computer Service (controller part)
+  hosts: controller
+  user: "{{ remote_user }}"
+  tags:
+    - nova
+    - nova_controller
+
+  roles:
+    - nova_controller
+
+- name: Deploy and Configure the Computer Service (compute part)
+  hosts: compute
+  user: "{{ remote_user }}"
+  tags:
+    - nova
+    - nova_compute
+
+  roles:
+    - nova_compute
+

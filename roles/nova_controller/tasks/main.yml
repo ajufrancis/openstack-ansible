@@ -1,0 +1,4 @@
+---
+- include: nova_install.yml
+- include: nova_setup_db.yml
+- include: nova_init.yml

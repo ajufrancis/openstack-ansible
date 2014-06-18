@@ -1,0 +1,42 @@
+---
+
+- name: Create nova user
+  shell: creates={{ nova_user_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=nova --pass={{ nova_pass }} --email=nova_email@example.com
+- name: Mark nova user as created
+  lineinfile: dest={{ nova_user_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add nova admin role
+  shell: creates={{ nova_admin_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=nova --tenant=service --role=admin
+- name: Mark nova admin roll as added
+  lineinfile: dest={{ nova_admin_role }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create compute service
+  shell: creates={{ nova_service_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=nova --type=compute --description="OpenStack Compute"
+- name: Mark compute service as created
+  lineinfile: dest={{ nova_service_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Get the compute service id
+  shell: creates={{ nova_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ compute / {print $2}'
+  register: nova_service_id
+- name: Create compute endpoint
+  shell: creates={{ nova_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ nova_service_id['stdout_lines'][0] }} --publicurl=http://controller:8774/v2/%\(tenant_id\)s --internalurl=http://controller:8774/v2/%\(tenant_id\)s --adminurl=http://controller:8774/v2/%\(tenant_id\)s
+- name: Mark image endpoint as created
+  lineinfile: dest={{ nova_endpoint_created }}
+              line=done
+              state=present
+              create=yes
+

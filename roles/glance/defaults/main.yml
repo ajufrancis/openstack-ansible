@@ -1,0 +1,9 @@
+---
+
+conf_dir: "{{ glance_conf_dir }}"
+
+conf_name: glance-api.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+
+conf2_name: glance-registry.conf
+conf2_file: "{{ conf_dir }}/{{ conf2_name }}"

@@ -1,0 +1,29 @@
+---
+# This playbook will install mysql and create db user and give permissions.
+
+- name: Debug vars
+  debug: var=mysql_root_user
+
+- name: Install Mysql package
+  apt: name={{ item }} state=installed
+  with_items:
+   - mysql-server
+   - python-mysqldb
+
+- name: Start Mysql Service
+  service: name=mysql state=started enabled=true
+
+- name: Update root password
+  mysql_user: login_user={{ mysql_root_user }}
+              login_password={{ mysql_root_password }}
+              login_port=3306
+              state=present
+              name={{ mysql_root_user }}
+              password={{ mysql_root_password }}
+              host={{ item }}
+              priv=*.*:ALL,GRANT
+              check_implicit_admin=true
+  with_items:
+  - localhost
+  - "%"
+

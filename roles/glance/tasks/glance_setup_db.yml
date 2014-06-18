@@ -1,0 +1,35 @@
+---
+
+- name: Create glance database
+  mysql_db: db=glance
+            state=present
+            encoding=utf8
+            login_user={{ mysql_root_user }}
+            login_password={{ mysql_root_password }}
+
+- name: Grant access to glance user
+  mysql_user: login_user={{ mysql_root_user }}
+              login_password={{ mysql_root_password }}
+              login_port=3306
+              state=present
+              name=glance
+              password={{ glance_dbpass }}
+              host={{ item }}
+              priv=glance.*:ALL,GRANT
+  with_items:
+  - localhost
+  - "%"
+  notify:
+  - restart glance
+
+- name: Create glance tables
+  shell: creates={{ glance_tables_created }}
+         su -s /bin/sh -c "glance-manage db_sync" glance
+  
+- name: Mark tables as created
+  lineinfile: dest={{ glance_tables_created }}
+              line=done
+              state=present
+              create=yes
+
+
