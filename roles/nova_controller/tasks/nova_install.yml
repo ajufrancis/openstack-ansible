@@ -36,6 +36,7 @@
   - [
     {option: connection, value: "mysql://nova:{{ nova_dbpass }}@controller/nova"},
     ]
+  notify: restart nova
 
 - name: Configure rabbit rpc
   ini_file: dest={{ item[0] }}
@@ -50,6 +51,7 @@
     {option: rabbit_host, value: controller},
     {option: rabbit_password, value: "{{ rabbit_pass }}"},
     ]
+  notify: restart nova
 
 - name: Configure IPs
   ini_file: dest={{ item[0] }}
@@ -64,6 +66,7 @@
     {option: vncserver_listen, value: "{{ controller_mgmt_ip }}"},
     {option: vncserver_proxyclient_address, value: "{{ controller_mgmt_ip }}"},
     ]
+  notify: restart nova
 
 - name: Configure keystone authtoken
   ini_file: dest={{ item[0] }}
@@ -82,6 +85,7 @@
     {option: admin_user, value: nova},
     {option: admin_password, value: "{{ nova_pass }}"},
     ]
+  notify: restart nova
 
 - name: Configure strategy
   ini_file: dest={{ item[0] }}
@@ -94,6 +98,7 @@
   - [
     {option: auth_strategy, value: keystone},
     ]
+  notify: restart nova
 
 - name: restart nova
   service: name={{ item }} state=restarted

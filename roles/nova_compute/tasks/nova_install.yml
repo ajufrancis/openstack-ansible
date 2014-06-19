@@ -6,13 +6,13 @@
   - nova-compute-kvm
   - python-guestfs
 
-- name: Run statoverride
-  shell: creates={{ nova_statoverride_created }}
-         dpkg-statoverride --update --add root root 0644 /boot/vmlinuz-${version}
 - name: Setup statoverride
   template: src=statoverride.j2
             dest=/etc/kernel/postinst.d/statoverride
             mode=0775
+- name: Run statoverride
+  shell: creates={{ nova_statoverride_created }}
+         dpkg-statoverride --update --add root root 0644 /boot/vmlinuz-${version}
 - name: Mark statoverride created
   lineinfile: dest={{ nova_statoverride_created }}
               line=done
