@@ -3,7 +3,7 @@
 #set -vx
 
 if [ $# != 1 ] ; then
-  echo "Usage: $0 <all|common|keystone|glance|nova|neutron|cinder>"
+  echo "Usage: $0 <all|tag>"
   exit 1;
 fi
 

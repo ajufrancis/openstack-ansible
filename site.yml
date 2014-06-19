@@ -1,10 +1,34 @@
 ---
 # This playbook deploys the entire OpenStack install
 
-- name: Setup and Configure Common Elements
-  hosts: all
+- name: Setup and Configure Common Elements for controller
+  hosts: controller
   user: "{{ remote_user }}"
-  tags: common
+  tags:
+    - keystone
+    - glance
+    - nova
+    - common
+    - os_setup
+
+  roles:
+    - common
+
+- name: Setup and Configure Common Elements for network
+  hosts: network
+  user: "{{ remote_user }}"
+  tags:
+    - common
+
+  roles:
+    - common
+
+- name: Setup and Configure Common Elements for compute
+  hosts: compute
+  user: "{{ remote_user }}"
+  tags:
+    - common
+    - nova
 
   roles:
     - common
@@ -12,10 +36,24 @@
 - name: Deploy and Configure the OS Database
   hosts: db
   user: "{{ remote_user }}"
-  tags: db
+  tags:
+    - db
+    - os_setup
 
   roles:
     - db
+
+- name: Deploy and Configure the OS MQ
+  hosts: mq
+  user: "{{ remote_user }}"
+  tags:
+    - mq
+    - rabbit
+    - rabbitmq
+    - os_setup
+
+  roles:
+    - mq
 
 - name: Deploy and Configure the Identity Service
   hosts: controller

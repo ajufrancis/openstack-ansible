@@ -1,11 +1,18 @@
+# External address of controller machine
 [controller]
 10.40.10.210
 
+# External address of network1 machine
 [network]
-#10.40.10.220
+10.40.10.220
 
+# External address of compute1 machine
 [compute]
 10.40.10.230
 
 [db:children]
 controller
+
+[mq:children]
+controller
+

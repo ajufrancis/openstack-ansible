@@ -1,0 +1,7 @@
+---
+
+conf_dir: "{{ mysql_conf_dir }}"
+
+conf_name: my.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+

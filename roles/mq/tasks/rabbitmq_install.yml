@@ -1,0 +1,19 @@
+---
+
+- name: Debug vars
+  debug: var=mysql_root_user
+
+- name: Install RabbitMQ package
+  apt: name={{ item }} state=installed
+  with_items:
+   - rabbitmq-server
+
+- name: Change RabbitMQ password
+  command: creates={{ rabbitmq_password_changed }}
+           rabbitmqctl change_password guest {{ rabbit_pass }}
+- name: Mark RabbitMQ password changed
+  lineinfile: dest={{ rabbitmq_password_changed }}
+              line=done
+              state=present
+              create=yes
+

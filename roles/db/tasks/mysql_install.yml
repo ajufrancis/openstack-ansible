@@ -27,3 +27,18 @@
   - localhost
   - "%"
 
+- name: Configure db
+  ini_file: dest={{ item[0] }}
+            section=mysqld
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+  - ["{{ conf_file }}"]
+  - [
+    {option: bind-address, value: "{{ controller_mgmt_ip }}"},
+    ]
+
+- name: Restart Mysql Service
+  service: name=mysql state=restarted enabled=true
+

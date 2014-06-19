@@ -1,5 +1,7 @@
 ---
-# Variables listed here are applicable to all host groups
+#
+# Configure the file by changing the variables in this section
+#
 
 # ips and interfaces
 controller_mgmt_ip: 192.168.100.210
@@ -47,6 +49,7 @@ trove_pass: TROVE_PASS
 keystone_admin_token: ADMIN_TOKEN
 
 # ansible stuff
+# remote_user is the login of the remote machines
 remote_user: tesora
 
 #
@@ -64,6 +67,12 @@ work_dir: /home/tesora/provision
 # authentication
 service_token: "{{ keystone_admin_token }}"
 service_endpoint: "http://controller:35357/v2.0"
+
+# mysql stuff
+mysql_conf_dir: /etc/mysql
+
+# rabbitmq stuff
+rabbitmq_password_changed: "{{ work_dir }}/.rabbitmq_password"
 
 # keystone stuff
 keystone_conf_dir: /etc/keystone
