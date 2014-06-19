@@ -2,6 +2,6 @@
 
 conf_dir: "{{ mysql_conf_dir }}"
 
-conf_name: my.cfg
+conf_name: my.cnf
 conf_file: "{{ conf_dir }}/{{ conf_name }}"
 
