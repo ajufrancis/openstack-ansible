@@ -116,4 +116,6 @@ nova_admin_role: "{{ work_dir }}/.nova_admin_role"
 nova_service_created: "{{ work_dir }}/.nova_service"
 nova_endpoint_created: "{{ work_dir }}/.nova_endpoint"
 
+nova_statoverride_created: "{{ work_dir }}/.nova_statoverride"
+
 
