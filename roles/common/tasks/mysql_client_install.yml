@@ -1,0 +1,10 @@
+---
+
+- name: Install mysql client, etc.
+  apt: pkg={{ item }} state=latest update_cache=yes
+  with_items:
+  - mysql-client
+  - python-mysqldb
+  - python-software-properties
+  tags: mysql_client
+

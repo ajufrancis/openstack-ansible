@@ -1,0 +1,10 @@
+---
+
+- name: Make sure we have a work directory
+  file: dest={{ work_dir }}
+        state=directory
+        owner={{ remote_user }}
+        group={{ remote_user }}
+        mode=0775
+  tags: work_dir
+

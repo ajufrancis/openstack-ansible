@@ -1,39 +1,7 @@
 ---
-# This playbook contains common plays that will be run on all nodes.
 
-- name: Make sure we have a work directory
-  file: dest={{ work_dir }}
-        state=directory
-        owner={{ remote_user }}
-        group={{ remote_user }}
-        mode=0775
-  tags: common
-
-# Only run "update_cache=yes" if the last one is more than more than 3600 seconds ago
-- apt: update_cache=yes cache_valid_time=3600
-
-# Update all packages to the latest version
-- apt: upgrade=dist
-
-- name: Install ntp
-  apt: pkg={{ item }} state=latest update_cache=yes
-  with_items:
-  - ntp
-  tags: ntp
-
-- name: Configure ntp file
-  template: src=ntp.conf.j2 dest=/etc/ntp.conf
-  tags: ntp
-  notify: restart ntp
-
-- name: Start the ntp service
-  service: name=ntp state=started enabled=true
-  tags: ntp
-
-- name: Install mysql client, etc.
-  apt: pkg={{ item }} state=latest update_cache=yes
-  with_items:
-  - mysql-client
-  - python-mysqldb
-  - python-software-properties
+- include: remote_env.yml
+- include: dist_current.yml
+- include: ntp_install.yml
+- include: mysql_client_install.yml
 

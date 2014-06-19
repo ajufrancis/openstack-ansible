@@ -1,8 +1,5 @@
 ---
 
-- name: Debug vars
-  debug: var=mysql_root_user
-
 - name: Install RabbitMQ package
   apt: name={{ item }} state=installed
   with_items:
