@@ -3,7 +3,7 @@
 - name: Install keystone Identity service
   apt: name={{ item }} state=present
   with_items:
-   - keystone
+    - keystone
 
 - name: Remove sqllite db
   file: path=/var/lib/keystone/keystone.db
@@ -19,7 +19,8 @@
               backup=yes
               create=yes
   with_items:
-  - "{{ conf_file }}"
+    - "{{ conf_file }}"
+  notify: restart keystone
 
 - name: Configure db conn
   ini_file: dest={{ item[0] }}
@@ -28,10 +29,11 @@
             value={{item[1].value}}
             backup=yes
   with_nested:
-  - ["{{ conf_file }}"]
-  - [
-    {option: connection, value: "mysql://keystone:{{ keystone_dbpass }}@controller/keystone"},
-    ]
+    - ["{{ conf_file }}"]
+    - [
+      {option: connection, value: "mysql://keystone:{{ keystone_dbpass }}@controller/keystone"},
+      ]
+  notify: restart keystone
 
 - name: Configure keystone options
   ini_file: dest={{ item[0] }}
@@ -40,12 +42,23 @@
             value={{ item[1].value }}
             backup=yes
   with_nested:
-  - ["{{ conf_file }}"]
-  - [
-    {option: admin_token, value: "{{ keystone_admin_token }}"},
-    {option: log_dir, value: /var/log/keystone},
-    ]
+    - ["{{ conf_file }}"]
+    - [
+      {option: admin_token, value: "{{ keystone_admin_token }}"},
+      {option: log_dir, value: /var/log/keystone},
+      ]
+  notify: restart keystone
 
-- name: restart keystone
-  service: name=keystone state=restarted
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart keystone
+  shell: creates={{ keystone_restarted }}
+         service {{ item }} restart
+  with_items:
+    - keystone
+- name: Mark keystone restarted
+  lineinfile: dest={{ keystone_restarted }}
+              line=done
+              state=present
+              create=yes
 

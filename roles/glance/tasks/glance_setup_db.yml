@@ -6,6 +6,7 @@
             encoding=utf8
             login_user={{ mysql_root_user }}
             login_password={{ mysql_root_password }}
+  notify: restart glance
 
 - name: Grant access to glance user
   mysql_user: login_user={{ mysql_root_user }}
@@ -17,19 +18,17 @@
               host={{ item }}
               priv=glance.*:ALL,GRANT
   with_items:
-  - localhost
-  - "%"
-  notify:
-  - restart glance
+    - localhost
+    - "%"
+  notify: restart glance
 
 - name: Create glance tables
   shell: creates={{ glance_tables_created }}
          su -s /bin/sh -c "glance-manage db_sync" glance
-  
+  notify: restart glance
 - name: Mark tables as created
   lineinfile: dest={{ glance_tables_created }}
               line=done
               state=present
               create=yes
-
 

@@ -3,7 +3,7 @@
 - name: Install ntp
   apt: pkg={{ item }} state=latest update_cache=yes
   with_items:
-  - ntp
+    - ntp
   tags: ntp
 
 - name: Configure ntp file

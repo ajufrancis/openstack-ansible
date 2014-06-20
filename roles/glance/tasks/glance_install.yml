@@ -3,8 +3,8 @@
 - name: Install glance Image service
   apt: name={{ item }} state=present
   with_items:
-  - glance
-  - python-glanceclient
+    - glance
+    - python-glanceclient
 
 - name: Remove sqllite db
   file: path=/var/lib/glance/glance.db
@@ -18,8 +18,9 @@
               backup=yes
               create=yes
   with_items:
-  - "{{ conf_file }}"
-  - "{{ conf2_file }}"
+    - "{{ conf_file }}"
+    - "{{ conf2_file }}"
+  notify: restart glance
 
 - name: Configure db conn
   ini_file: dest={{ item[0] }}
@@ -28,10 +29,11 @@
             value={{item[1].value}}
             backup=yes
   with_nested:
-  - ["{{ conf_file }}", "{{ conf2_file }}"]
-  - [
-    {option: connection, value: "mysql://glance:{{ glance_dbpass }}@controller/glance"},
-    ]
+    - ["{{ conf_file }}", "{{ conf2_file }}"]
+    - [
+      {option: connection, value: "mysql://glance:{{ glance_dbpass }}@controller/glance"},
+      ]
+  notify: restart glance
 
 - name: Configure rabbit rpc
   ini_file: dest={{ item[0] }}
@@ -40,12 +42,13 @@
             value={{ item[1].value }}
             backup=yes
   with_nested:
-  - ["{{ conf_file }}"]
-  - [
-    {option: rpc_backend, value: rabbit},
-    {option: rabbit_host, value: controller},
-    {option: rabbit_password, value: "{{ rabbit_pass }}"},
-    ]
+    - ["{{ conf_file }}"]
+    - [
+      {option: rpc_backend, value: rabbit},
+      {option: rabbit_host, value: controller},
+      {option: rabbit_password, value: "{{ rabbit_pass }}"},
+      ]
+  notify: restart glance
 
 - name: Configure keystone authtoken
   ini_file: dest={{ item[0] }}
@@ -54,16 +57,17 @@
             value={{item[1].value}}
             backup=yes
   with_nested:
-  - ["{{ conf_file }}", "{{ conf2_file }}"]
-  - [
-    {option: auth_uri, value: "http://controller:5000"},
-    {option: auth_host, value: controller},
-    {option: auth_port, value: 35357},
-    {option: auth_protocol, value: http},
-    {option: admin_tenant_name, value: service},
-    {option: admin_user, value: glance},
-    {option: admin_password, value: "{{ glance_pass }}"},
-    ]
+    - ["{{ conf_file }}", "{{ conf2_file }}"]
+    - [
+      {option: auth_uri, value: "http://controller:5000"},
+      {option: auth_host, value: controller},
+      {option: auth_port, value: 35357},
+      {option: auth_protocol, value: http},
+      {option: admin_tenant_name, value: service},
+      {option: admin_user, value: glance},
+      {option: admin_password, value: "{{ glance_pass }}"},
+      ]
+  notify: restart glance
 
 - name: Configure paste deploy
   ini_file: dest={{ item[0] }}
@@ -72,14 +76,23 @@
             value={{item[1].value}}
             backup=yes
   with_nested:
-  - ["{{ conf_file }}", "{{ conf2_file }}"]
-  - [
-    {option: flavor, value: keystone},
-    ]
+    - ["{{ conf_file }}", "{{ conf2_file }}"]
+    - [
+      {option: flavor, value: keystone},
+      ]
+  notify: restart glance
 
-- name: restart glance
-  service: name={{ item }} state=restarted
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart glance
+  shell: creates={{ glance_restarted }}
+         service {{ item }} restart
   with_items:
-  - glance-registry
-  - glance-api
+    - glance-registry
+    - glance-api
+- name: Mark glance restarted
+  lineinfile: dest={{ glance_restarted }}
+              line=done
+              state=present
+              create=yes
 

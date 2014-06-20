@@ -7,8 +7,8 @@
 - name: Install Mysql package
   apt: name={{ item }} state=installed
   with_items:
-   - mysql-server
-   - python-mysqldb
+    - mysql-server
+    - python-mysqldb
 
 - name: Start Mysql Service
   service: name=mysql state=started enabled=true
@@ -24,8 +24,9 @@
               priv=*.*:ALL,GRANT
               check_implicit_admin=true
   with_items:
-  - localhost
-  - "%"
+    - localhost
+    - "%"
+  notify: restart mysql
 
 - name: Configure db
   lineinfile: dest={{ item }}
@@ -35,8 +36,21 @@
               backup=yes
               create=yes
   with_items:
-  - "{{ conf_file }}"
+    - "{{ conf_file }}"
+  notify: restart mysql
 
 - name: Restart Mysql Service
   service: name=mysql state=restarted enabled=true
+
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart MySQL Service
+  shell: creates={{ mysql_restarted }}
+         service {{ item }} restart
+  with_items: mysql
+- name: Mark MySQL restarted
+  lineinfile: dest={{ mysql_restarted }}
+              line=done
+              state=present
+              create=yes
 

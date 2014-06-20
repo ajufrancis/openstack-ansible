@@ -19,6 +19,7 @@
   user: "{{ remote_user }}"
   tags:
     - common
+    - neutron
 
   roles:
     - common
@@ -71,7 +72,7 @@
   roles:
     - glance
 
-- name: Deploy and Configure the Computer Service (controller part)
+- name: Deploy and Configure the Compute Service (controller part)
   hosts: controller
   user: "{{ remote_user }}"
   tags:
@@ -81,7 +82,7 @@
   roles:
     - nova_controller
 
-- name: Deploy and Configure the Computer Service (compute part)
+- name: Deploy and Configure the Compute Service (compute part)
   hosts: compute
   user: "{{ remote_user }}"
   tags:
@@ -90,4 +91,34 @@
 
   roles:
     - nova_compute
+
+- name: Deploy and Configure the Networking Service (controller part)
+  hosts: controller
+  user: "{{ remote_user }}"
+  tags:
+    - neutron
+    - neutron_controller
+
+  roles:
+    - neutron_controller
+
+- name: Deploy and Configure the Networking Service (network part)
+  hosts: network
+  user: "{{ remote_user }}"
+  tags:
+    - neutron
+    - neutron_network
+
+  roles:
+    - neutron_network
+
+- name: Deploy and Configure the Networking Service (compute part)
+  hosts: compute
+  user: "{{ remote_user }}"
+  tags:
+    - neutron
+    - neutron_compute
+
+  roles:
+    - neutron_compute
 

@@ -3,7 +3,7 @@
 - name: Install RabbitMQ package
   apt: name={{ item }} state=installed
   with_items:
-   - rabbitmq-server
+    - rabbitmq-server
 
 - name: Change RabbitMQ password
   command: creates={{ rabbitmq_password_changed }}

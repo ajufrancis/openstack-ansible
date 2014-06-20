@@ -1,0 +1,25 @@
+---
+
+conf_dir: "{{ neutron_conf_dir }}"
+
+conf_name: neutron.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+
+conf2_name: ml2_conf.ini
+conf2_file: "{{ conf_dir }}/plugins/ml2/{{ conf2_name }}"
+
+conf3_name: sysctl.conf
+conf3_file: "/etc/{{ conf3_name }}"
+
+
+
+
+conf5_name: l3_agent.ini
+conf5_file: "{{ conf_dir }}/{{ conf5_name }}"
+
+conf6_name: dhcp_agent.ini
+conf6_file: "{{ conf_dir }}/{{ conf6_name }}"
+
+conf7_name: metadata_agent.ini
+conf7_file: "{{ conf_dir }}/{{ conf7_name }}"
+
