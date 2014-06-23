@@ -1,41 +1,41 @@
 ---
 
-- name: Create nova user
-  shell: creates={{ nova_user_created }}
-         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=nova --pass={{ nova_pass }} --email=nova_email@example.com
-- name: Mark nova user as created
-  lineinfile: dest={{ nova_user_created }}
+- name: Create neutron user
+  shell: creates={{ neutron_user_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=neutron --pass={{ neutron_pass }} --email=neutron_email@example.com
+- name: Mark neutron user as created
+  lineinfile: dest={{ neutron_user_created }}
               line=done
               state=present
               create=yes
 
-- name: Add nova admin role
-  shell: creates={{ nova_admin_role }}
-         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=nova --tenant=service --role=admin
-- name: Mark nova admin roll as added
-  lineinfile: dest={{ nova_admin_role }}
+- name: Add neutron admin role
+  shell: creates={{ neutron_admin_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=neutron --tenant=service --role=admin
+- name: Mark neutron admin roll as added
+  lineinfile: dest={{ neutron_admin_role }}
               line=done
               state=present
               create=yes
 
-- name: Create compute service
-  shell: creates={{ nova_service_created }}
-         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=nova --type=compute --description="OpenStack Compute"
-- name: Mark compute service as created
-  lineinfile: dest={{ nova_service_created }}
+- name: Create network service
+  shell: creates={{ neutron_service_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=neutron --type=network --description="OpenStack Compute"
+- name: Mark network service as created
+  lineinfile: dest={{ neutron_service_created }}
               line=done
               state=present
               create=yes
 
-- name: Get the compute service id
-  shell: creates={{ nova_endpoint_created }}
-         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ compute / {print $2}'
-  register: nova_service_id
-- name: Create compute endpoint
-  shell: creates={{ nova_endpoint_created }}
-         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ nova_service_id['stdout_lines'][0] }} --publicurl=http://controller:8774/v2/%\(tenant_id\)s --internalurl=http://controller:8774/v2/%\(tenant_id\)s --adminurl=http://controller:8774/v2/%\(tenant_id\)s
-- name: Mark image endpoint as created
-  lineinfile: dest={{ nova_endpoint_created }}
+- name: Get the network service id
+  shell: creates={{ neutron_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ network / {print $2}'
+  register: neutron_service_id
+- name: Create network endpoint
+  shell: creates={{ neutron_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ neutron_service_id['stdout_lines'][0] }} --publicurl http://controller:9696 --adminurl http://controller:9696 --internalurl http://controller:9696
+- name: Mark network endpoint as created
+  lineinfile: dest={{ neutron_endpoint_created }}
               line=done
               state=present
               create=yes

@@ -8,3 +8,5 @@
     - neutron-dhcp-agent
     - neutron-metadata-agent
 
+- name: sysctl
+  command: sysctl -p

@@ -1,34 +1,24 @@
 ---
 
-- name: Create nova database
+- name: Create neutron database
   mysql_db: db=nova
             state=present
             encoding=utf8
             login_user={{ mysql_root_user }}
             login_password={{ mysql_root_password }}
-  notify: restart nova controller
+  notify: restart neutron controller
 
-- name: Grant access to nova user
+- name: Grant access to neutron user
   mysql_user: login_user={{ mysql_root_user }}
               login_password={{ mysql_root_password }}
               login_port=3306
               state=present
-              name=nova
-              password={{ nova_dbpass }}
+              name=neutron
+              password={{ neutron_dbpass }}
               host={{ item }}
               priv=nova.*:ALL,GRANT
   with_items:
     - localhost
     - "%"
-  notify: restart nova controller
-
-- name: Create nova tables
-  shell: creates={{ nova_tables_created }}
-         su -s /bin/sh -c "nova-manage db sync" nova
-  notify: restart nova controller
-- name: Mark tables as created
-  lineinfile: dest={{ nova_tables_created }}
-              line=done
-              state=present
-              create=yes
+  notify: restart neutron controller
 
