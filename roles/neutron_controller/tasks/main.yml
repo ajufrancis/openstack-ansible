@@ -1,5 +1,5 @@
 ---
 - include: neutron_setup_db.yml
-- include: neutron_init.yml
+- include: neutron_os_init.yml
 # the install must go last
 - include: neutron_install.yml

@@ -1,0 +1,42 @@
+---
+
+- name: Add integration bridge
+  shell: creates={{ neutron_integration_bridge }}
+         ovs-vsctl add-br br-int
+- name: Mark integration bridge added
+  lineinfile: dest={{ neutron_integration_bridge }}
+              line=done
+              state=present
+              create=yes
+  notify: restart neutron network
+
+- name: Add external bridge
+  shell: creates={{ neutron_external_bridge }}
+         ovs-vsctl add-br br-ex
+- name: Mark external bridge added
+  lineinfile: dest={{ neutron_external_bridge }}
+              line=done
+              state=present
+              create=yes
+  notify: restart neutron network
+
+- name: Add external bridge port
+  shell: creates={{ neutron_external_bridge_port }}
+         ovs-vsctl add-port br-ex {{ network1_ext_interface }}
+- name: Mark external bridge port added
+  lineinfile: dest={{ neutron_external_bridge_port }}
+              line=done
+              state=present
+              create=yes
+  notify: restart neutron network
+
+- name: Add disable GRO bridge
+  shell: creates={{ neutron_gro_off }}
+         ethtool -K {{ network1_ext_interface }} gro off
+- name: Mark integration bridge added
+  lineinfile: dest={{ neutron_gro_off }}
+              line=done
+              state=present
+              create=yes
+  notify: restart neutron network
+

@@ -156,7 +156,7 @@
     - ["{{ conf7_file }}"]
     - [
       {option: auth_url, value: "http://controller:5000/v2.0"},
-      {option: auth_region, value: regionOne},
+      {option: auth_region, value: "{{ auth_region }}"},
       {option: admin_tenant_name, value: service},
       {option: admin_user, value: neutron},
       {option: admin_password, value: "{{ neutron_pass }}"},
@@ -178,7 +178,7 @@
       {option: tenant_network_types, value: gre},
       {option: mechanism_drivers, value: openvswitch},
       ]
-  notify: restart neutron controller
+  notify: restart neutron network
 
 - name: Configure ML2 plugin ml2 type gre
   ini_file: dest={{ item[0] }}
@@ -189,9 +189,9 @@
   with_nested:
     - ["{{ conf2_file }}"]
     - [
-      {option: tunnel_id_ranges, value: "1:1000"],
+      {option: tunnel_id_ranges, value: "1:1000"},
       ]
-  notify: restart neutron controller
+  notify: restart neutron network
 
 - name: Configure ML2 plugin ovs
   ini_file: dest={{ item[0] }}
@@ -202,15 +202,15 @@
   with_nested:
     - ["{{ conf2_file }}"]
     - [
-      {option: tunnel_id_ranges, value: "{{ network1_data_ip }}"],
-      {option: tunnel_type, value: gre],
+      {option: local_ip, value: "{{ network1_data_ip }}"},
+      {option: tunnel_type, value: gre},
       {option: enable_tunneling, value: True},
       ]
-  notify: restart neutron controller
+  notify: restart neutron network
 
 - name: Configure ML2 plugin security group
   ini_file: dest={{ item[0] }}
-            section=security_group
+            section=securitygroup
             option={{item[1].option}}
             value={{item[1].value}}
             backup=yes
@@ -220,21 +220,21 @@
       {option: firewall_driver, value: neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver},
       {option: enable_security_group, value: True},
       ]
-  notify: restart neutron controller
-
-
-
-
+  notify: restart neutron network
 
 # until a way to trigger the notify's after a task is done is found,
 # this'll have to do - we need to restart before the next task starts
 - name: Restart network neutron
-  shell: creates={{ neutron_compute_restarted }}
+  shell: creates={{ neutron_network_restarted }}
          service {{ item }} restart
   with_items:
-    - neutron-compute
-- name: Mark neutron compute restarted
-  lineinfile: dest={{ neutron_compute_restarted }}
+    - openvswitch-switch
+    - neutron-plugin-openvswitch-agent
+    - neutron-l3-agent
+    - neutron-dhcp-agent
+    - neutron-metadata-agent
+- name: Mark neutron network restarted
+  lineinfile: dest={{ neutron_network_restarted }}
               line=done
               state=present
               create=yes

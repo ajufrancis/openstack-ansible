@@ -1,65 +1,42 @@
 ---
 #
-# Configure the file by changing the variables in this section
+# Configure the variables by changing the variables in
+# 'custom'
 #
 
-# ips and interfaces
-controller_mgmt_ip: 192.168.100.210
-controller_mgmt_interface: p1p1
-controller_data_ip: 10.10.10.210
-controller_data_interface: p2p1
-controller_ext_ip: 10.40.10.210
-controller_ext_interface: em1
-network1_mgmt_ip: 192.168.100.220
-network1_mgmt_interface: p1p1
-network1_data_ip: 10.10.10.220
-network1_data_interface: p2p1
-network1_ext_ip: 10.40.10.220
-network1_ext_interface: em1
-compute1_mgmt_ip: 192.168.100.230
-compute1_mgmt_interface: p1p1
-compute1_data_ip: 10.10.10.230
-compute1_data_interface: p2p1
-compute1_ext_ip: 10.40.10.230
-compute1_ext_interface: em1
-
-# passwords, etc.
-mysql_root_user: root
-mysql_root_password: password
-rabbit_pass: RABBIT_PASS
-keystone_dbpass: KEYSTONE_DBPASS
-demo_pass: DEMO_PASS
-admin_pass: ADMIN_PASS
-glance_dbpass: GLANCE_DBPASS
-glance_pass: GLANCE_PASS
-nova_dbpass: NOVA_DBPASS
-nova_pass: NOVA_PASS
-dash_dbpass: DASH_DBPASS
-cinder_dbpass: CINDER_DBPASS
-cinder_pass: CINDER_PASS
-neutron_dbpass: NEUTRON_DBPASS
-neutron_pass: NEUTRON_PASS
-heat_dbpass: HEAT_DBPASS
-heat_pass: HEAT_PASS
-ceilometer_dbpass: CEILOMETER_DBPASS
-ceilometer_pass: CEILOMETER_PASS
-trove_dbpass: TROVE_DBPASS
-trove_pass: TROVE_PASS
-
-keystone_admin_token: ADMIN_TOKEN
-metadata_secret: METADATA_SECRET
-
-# ansible stuff
-# remote_user is the login of the remote machines
-remote_user: tesora
-
 #
-# Things after here probably don't need to be changed
+# Things in this file probably don't need to be changed
 #
 
 # generic defaults
-ntp_server: pool.ntp.org
-work_dir: /home/tesora/provision
+ntp_server: "pool.ntp.org"
+work_dir: "/home/tesora/provision"
+
+# individual network parameters
+controller_mgmt_ip: "{{ management_subnet }}.{{ controller_machine_ip }}"
+controller_mgmt_interface: "{{ management_interface }}"
+controller_data_ip: "{{ data_subnet }}.{{ controller_machine_ip }}"
+controller_data_interface: "{{ data_interface }}"
+controller_ext_ip: "{{ external_subnet }}.{{ controller_machine_ip }}"
+controller_ext_interface: "{{ external_interface }}"
+network1_mgmt_ip: "{{ management_subnet }}.{{ network_machine_ip }}"
+network1_mgmt_interface: "{{ management_interface }}"
+network1_data_ip: "{{ data_subnet }}.{{ network_machine_ip }}"
+network1_data_interface: "{{ data_interface }}"
+network1_ext_ip: "{{ external_subnet }}.{{ network_machine_ip }}"
+network1_ext_interface: "{{ external_interface }}"
+compute1_mgmt_ip: "{{ management_subnet }}.{{compute1_machine_ip }}"
+compute1_mgmt_interface: "{{ management_interface }}"
+compute1_data_ip: "{{ data_subnet }}.{{compute1_machine_ip }}"
+compute1_data_interface: "{{ data_interface }}"
+compute1_ext_ip: "{{ external_subnet }}.{{compute1_machine_ip }}"
+compute1_ext_interface: "{{ external_interface }}"
+
+guest_subnet: "{{ external_subnet }}"
+guest_gateway: "{{ guest_subnet }}.1"
+guest_cidr: "{{ guest_subnet }}.0/24"
+external_gateway: "{{ external_subnet }}.1"
+external_cidr: "{{ external_subnet }}.0/24"
 
 #
 # Changing these values may cause things to break
@@ -70,16 +47,16 @@ service_token: "{{ keystone_admin_token }}"
 service_endpoint: "http://controller:35357/v2.0"
 
 # mysql stuff
-mysql_conf_dir: /etc/mysql
-mysql_prefix: .mysql
+mysql_conf_dir: "/etc/mysql"
+mysql_prefix: ".mysql"
 mysql_restarted: "{{ work_dir }}/{{ mysql_prefix }}_restarted"
 
 # rabbitmq stuff
 rabbitmq_password_changed: "{{ work_dir }}/.rabbitmq_password"
 
 # keystone stuff
-keystone_conf_dir: /etc/keystone
-keystone_prefix: .keystone
+keystone_conf_dir: "/etc/keystone"
+keystone_prefix: ".keystone"
 keystone_restarted: "{{ work_dir }}/{{ keystone_prefix }}_restarted"
 keystone_tables_created: "{{ work_dir }}/{{ keystone_prefix }}_tables"
 
@@ -98,8 +75,8 @@ keystone_service_created: "{{ work_dir }}/{{ keystone_prefix }}_service"
 keystone_endpoint_created: "{{ work_dir }}/{{ keystone_prefix }}_endpoint"
 
 # glance stuff
-glance_conf_dir: /etc/glance
-glance_prefix: .glance
+glance_conf_dir: "/etc/glance"
+glance_prefix: ".glance"
 glance_restarted: "{{ work_dir }}/{{ glance_prefix }}_restarted"
 glance_tables_created: "{{ work_dir }}/{{ glance_prefix }}_tables"
 
@@ -115,8 +92,8 @@ glance_cirros_uploaded: "{{ work_dir }}/{{ glance_prefix }}_cirros"
 glance_ubuntu_uploaded: "{{ work_dir }}/{{ glance_prefix }}_ubuntu"
 
 # nova stuff
-nova_conf_dir: /etc/nova
-nova_prefix: .nova
+nova_conf_dir: "/etc/nova"
+nova_prefix: ".nova"
 nova_controller_restarted: "{{ work_dir }}/{{ nova_prefix }}_controller_restarted"
 nova_compute_restarted: "{{ work_dir }}/{{ nova_prefix }}_compute_restarted"
 nova_tables_created: "{{ work_dir }}/{{ nova_prefix }}_tables"
@@ -129,10 +106,11 @@ nova_endpoint_created: "{{ work_dir }}/{{ nova_prefix }}_endpoint"
 nova_statoverride_created: "{{ work_dir }}/{{ nova_prefix }}_statoverride"
 
 # neutron stuff
-neutron_conf_dir: /etc/neutron
-neutron_prefix: .neutron
+neutron_conf_dir: "/etc/neutron"
+neutron_prefix: ".neutron"
 neutron_controller_restarted: "{{ work_dir }}/{{ neutron_prefix }}_controller_restarted"
 neutron_compute_restarted: "{{ work_dir }}/{{ neutron_prefix }}_compute_restarted"
+neutron_network_restarted: "{{ work_dir }}/{{ neutron_prefix }}_network_restarted"
 
 neutron_user_created: "{{ work_dir }}/{{ neutron_prefix }}_user"
 neutron_admin_role: "{{ work_dir }}/{{ neutron_prefix }}_admin_role"
@@ -141,3 +119,15 @@ neutron_endpoint_created: "{{ work_dir }}/{{ neutron_prefix }}_endpoint"
 
 neutron_sysctl: "{{ work_dir }}/{{ neutron_prefix }}_sysctl"
 
+neutron_integration_bridge: "{{ work_dir }}/{{ neutron_prefix }}_integration_bridge"
+neutron_external_bridge: "{{ work_dir }}/{{ neutron_prefix }}_external_bridge"
+neutron_external_bridge_port: "{{ work_dir }}/{{ neutron_prefix }}_external_bridge_port"
+neutron_gro_off: "{{ work_dir }}/{{ neutron_prefix }}_gro_off"
+
+neutron_external_network: "{{ work_dir }}/{{ neutron_prefix }}_external_network"
+neutron_external_subnet: "{{ work_dir }}/{{ neutron_prefix }}_external_subnet"
+neutron_demo_network: "{{ work_dir }}/{{ neutron_prefix }}_demo_network"
+neutron_demo_subnet: "{{ work_dir }}/{{ neutron_prefix }}_demo_subnet"
+neutron_demo_router: "{{ work_dir }}/{{ neutron_prefix }}_demo_router"
+neutron_demo_router_interface: "{{ work_dir }}/{{ neutron_prefix }}_demo_router_interface"
+neutron_demo_router_gateway: "{{ work_dir }}/{{ neutron_prefix }}_demo_router_gateway"

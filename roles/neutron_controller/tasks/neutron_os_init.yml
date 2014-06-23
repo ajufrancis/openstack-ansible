@@ -20,7 +20,7 @@
 
 - name: Create network service
   shell: creates={{ neutron_service_created }}
-         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=neutron --type=network --description="OpenStack Compute"
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=neutron --type=network --description="OpenStack Networking"
 - name: Mark network service as created
   lineinfile: dest={{ neutron_service_created }}
               line=done

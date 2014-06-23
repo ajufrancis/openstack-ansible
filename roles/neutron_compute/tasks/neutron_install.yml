@@ -1,27 +1,34 @@
 ---
 
-- name: Install nova Compute service on compute
-  apt: name={{ item }} state=present
-  with_items:
-    - nova-compute-kvm
-    - python-guestfs
-
-- name: Setup statoverride
-  template: src=statoverride.j2
-            dest=/etc/kernel/postinst.d/statoverride
-            mode=0775
-- name: Run statoverride
-  shell: creates={{ nova_statoverride_created }}
-         dpkg-statoverride --update --add root root 0644 /boot/vmlinuz-${version}
-- name: Mark statoverride created
-  lineinfile: dest={{ nova_statoverride_created }}
+- name: Configure sysctl
+  lineinfile: dest={{ item[0] }}
+              regexp={{item[1].regexp}}
+              insertbefore=BOF
+              line={{item[1].line}}
+              backup=yes
+              create=yes
+  with_nested:
+    - ["{{ conf3_file }}"]
+    - [
+      {regexp: net\.ipv4\.conf\.all\.rp_filter, line: net.ipv4.conf.all.rp_filter=0},
+      {regexp: net\.ipv4\.conf\.default\.rp_filter, line: net.ipv4.conf.default.rp_filter=0},
+      ]
+  notify: sysctl
+- name: Run sysctl
+  shell: creates={{ neutron_sysctl }}
+         sysctl -p
+- name: Mark sysctl
+  lineinfile: dest={{ neutron_sysctl }}
               line=done
               state=present
               create=yes
 
-- name: Remove sqllite db
-  file: path=/var/lib/nova/nova.sqlite
-        state=absent
+- name: Install neutron Network service on network
+  apt: name={{ item }} state=present
+  with_items:
+    - neutron-common
+    - neutron-plugin-ml2
+    - neutron-plugin-openvswitch-agent
 
 - name: Make sure default section exists in conf files
   lineinfile: dest={{ item }}
@@ -32,52 +39,24 @@
               create=yes
   with_items:
     - "{{ conf_file }}"
-  notify: restart nova compute
+    - "{{ conf4_file }}"
+    - "{{ conf5_file }}"
+    - "{{ conf6_file }}"
+    - "{{ conf7_file }}"
+  notify: restart neutron compute
 
-- name: Configure db conn
+- name: Configure strategy
   ini_file: dest={{ item[0] }}
-            section=database
+            section=DEFAULT
             option={{item[1].option}}
             value={{item[1].value}}
             backup=yes
   with_nested:
     - ["{{ conf_file }}"]
     - [
-      {option: connection, value: "mysql://nova:{{ nova_dbpass }}@controller/nova"},
+      {option: auth_strategy, value: keystone},
       ]
-  notify: restart nova compute
-
-- name: Configure rabbit rpc
-  ini_file: dest={{ item[0] }}
-            section=DEFAULT
-            option={{ item[1].option }}
-            value={{ item[1].value }}
-            backup=yes
-  with_nested:
-    - ["{{ conf_file }}"]
-    - [
-      {option: rpc_backend, value: rabbit},
-      {option: rabbit_host, value: controller},
-      {option: rabbit_password, value: "{{ rabbit_pass }}"},
-      ]
-  notify: restart nova compute
-
-- name: Configure IPs
-  ini_file: dest={{ item[0] }}
-            section=DEFAULT
-            option={{ item[1].option }}
-            value={{ item[1].value }}
-            backup=yes
-  with_nested:
-    - ["{{ conf_file }}"]
-    - [
-      {option: my_ip, value: "{{ compute1_mgmt_ip }}"},
-      {option: vnc_enabled, value: True},
-      {option: vncserver_listen, value: 0.0.0.0},
-      {option: vncserver_proxyclient_address, value: "{{ compute1_mgmt_ip }}"},
-      {option: novncproxy_base_url, value: "http://controller:6080/vnc_auto.html"},
-      ]
-  notify: restart nova compute
+  notify: restart neutron compute
 
 - name: Configure keystone authtoken
   ini_file: dest={{ item[0] }}
@@ -93,12 +72,27 @@
       {option: auth_port, value: 35357},
       {option: auth_protocol, value: http},
       {option: admin_tenant_name, value: service},
-      {option: admin_user, value: nova},
-      {option: admin_password, value: "{{ nova_pass }}"},
+      {option: admin_user, value: neutron},
+      {option: admin_password, value: "{{ neutron_pass }}"},
       ]
-  notify: restart nova compute
+  notify: restart neutron compute
 
-- name: Configure strategy
+- name: Configure rabbit rpc
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: rpc_backend, value: neutron.openstack.common.rpc.impl_kombu},
+      {option: rabbit_host, value: controller},
+      {option: rabbit_password, value: "{{ rabbit_pass }}"},
+      ]
+  notify: restart neutron compute
+
+- name: Configure networking to use ML2 plugin
   ini_file: dest={{ item[0] }}
             section=DEFAULT
             option={{item[1].option}}
@@ -107,24 +101,111 @@
   with_nested:
     - ["{{ conf_file }}"]
     - [
-      {option: auth_strategy, value: keystone},
+      {option: core_plugin, value: ml2},
+      {option: service_plugins, value: router},
+      {option: allow_overlapping_ips, value: True},
       ]
-  notify: restart nova compute
+  notify: restart neutron compute
 
-- name: restart nova
-  service: name={{ item }} state=restarted
+- name: Configure network service providers
+  ini_file: dest={{ item[0] }}
+            section=service_providers
+            state=absent
+            backup=yes
   with_items:
-  - nova-compute
+    - ["{{ conf_file }}"]
+  notify: restart neutron compute
+
+- name: Configure ML2 plugin ml2
+  ini_file: dest={{ item[0] }}
+            section=ml2
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf2_file }}"]
+    - [
+      {option: type_drivers, value: gre},
+      {option: tenant_network_types, value: gre},
+      {option: mechanism_drivers, value: openvswitch},
+      ]
+  notify: restart neutron compute
+
+- name: Configure ML2 plugin ml2 type gre
+  ini_file: dest={{ item[0] }}
+            section=ml2_type_gre
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf2_file }}"]
+    - [
+      {option: tunnel_id_ranges, value: "1:1000"},
+      ]
+  notify: restart neutron compute
+
+- name: Configure ML2 plugin ovs
+  ini_file: dest={{ item[0] }}
+            section=ovs
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf2_file }}"]
+    - [
+      {option: local_ip, value: "{{ network1_data_ip }}"},
+      {option: tunnel_type, value: gre},
+      {option: enable_tunneling, value: True},
+      ]
+  notify: restart neutron compute
+
+- name: Configure ML2 plugin security group
+  ini_file: dest={{ item[0] }}
+            section=securitygroup
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf2_file }}"]
+    - [
+      {option: firewall_driver, value: neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver},
+      {option: enable_security_group, value: True},
+      ]
+  notify: restart neutron compute
+
+- name: Configure compute to use networking
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf4_file }}"]
+    - [
+      {option: network_api_class, value: nova.network.neutronv2.api.API},
+      {option: neutron_url, value: "http://controller:9696"},
+      {option: neutron_auth_strategy, value: keystone},
+      {option: neutron_admin_tenant_name, value: service},
+      {option: neutron_admin_username, value: neutron},
+      {option: neutron_admin_password, value: "{{ neutron_pass }}"},
+      {option: neutron_admin_auth_url, value: "http://controller:35357/v2.0"},
+      {option: linuxnet_interface_driver, value: nova.network.linux_net.LinuxOVSInterfaceDriver},
+      {option: firewall_driver, value: nova.virt.firewall.NoopFirewallDriver},
+      {option: security_group_api, value: neutron},
+      ]
+  notify: restart neutron compute
 
 # until a way to trigger the notify's after a task is done is found,
 # this'll have to do - we need to restart before the next task starts
-- name: Restart compute nova
-  shell: creates={{ nova_compute_restarted }}
+- name: Restart compute neutron
+  shell: creates={{ neutron_compute_restarted }}
          service {{ item }} restart
   with_items:
     - nova-compute
-- name: Mark nova compute restarted
-  lineinfile: dest={{ nova_compute_restarted }}
+    - openvswitch-switch
+    - neutron-plugin-openvswitch-agent
+- name: Mark neutron compute restarted
+  lineinfile: dest={{ neutron_compute_restarted }}
               line=done
               state=present
               create=yes

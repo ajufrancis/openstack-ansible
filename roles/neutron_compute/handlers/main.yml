@@ -1,8 +1,11 @@
 ---
 
-- name: restart neutron compute
+- name: restart neutron network
   service: name={{ item }} state=restarted
   with_items:
-    - nova_compute
+    - nova-compute
+    - openvswitch-switch
     - neutron-plugin-openvswitch-agent
 
+- name: reload sysctl
+  command: sysctl -p

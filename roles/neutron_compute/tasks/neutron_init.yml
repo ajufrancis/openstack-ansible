@@ -1,0 +1,11 @@
+---
+
+- name: Add integration bridge
+  shell: creates={{ neutron_integration_bridge }}
+         ovs-vsctl add-br br-int
+- name: Mark integration bridge added
+  lineinfile: dest={{ neutron_integration_bridge }}
+              line=done
+              state=present
+              create=yes
+

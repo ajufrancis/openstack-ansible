@@ -14,14 +14,20 @@ You'll need to install:
 
 git clone https://github.com/peterstac/openstack-ansible.git
 
+## Make sure your machines are set up according to the install guide.
+
+vi README.network
+
 ## Setup the variables (at a minimum the ip addresses for your install)
 
-vi group_vars/all
+cp custom_vars.yml.sample custom_vars.yml
+vi custom_vars.yml
 vi hosts
 
 ## Push up an authorized key to each of the three machines
 
 scp ~/.ssh/id_rsa.pub remote_user@controller:~/.ssh/authorized_keys
+(do this for network1 and compute1  as well)
 
 Note: This will replace the entire file - edit it if you wish to preserve other access keys
 
@@ -32,4 +38,8 @@ Note: This will replace the entire file - edit it if you wish to preserve other 
 ## Start the install
 
 ./install.sh all
+
+## To install in modular format, run help for list of valid tags
+
+./install.sh help
 

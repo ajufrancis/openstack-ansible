@@ -1,2 +1,3 @@
 ---
 - include: neutron_install.yml
+- include: neutron_init.yml

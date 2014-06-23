@@ -1,0 +1,152 @@
+Initial Machine Setup (see network_topology.jpg for network diagram)
+
+
+All machines are assumed to be installed with Ubuntu server 14.04 LTS
+
+    Download the 64 bit Ubuntu Server iso at http://www.ubuntu.com/download/server
+    Burn the image to a DVD-R
+    Install the operating system.  Most defaults were selected - the only option was to add sshd support.
+
+
+Configure the /etc/hosts file to know about the machines.  The file contents used is below.
+
+    127.0.0.1    localhost
+
+    192.168.100.210    controller
+    192.168.100.220    network1
+    192.168.100.230    compute1
+
+
+    # The following lines are desirable for IPv6 capable hosts
+    ::1     localhost ip6-localhost ip6-loopback
+    ff02::1 ip6-allnodes
+    ff02::2 ip6-allrouters
+
+
+Configuration was done to assure that the network cards came up in the same order (and to overcome flaky 14.04 CNDN).  Edit /etc/default/grub and make sure the following line is in it.
+
+    GRUB_CMDLINE_LINUX_DEFAULT="net.ifnames=1 biosdevname=0"
+
+
+Then run:
+
+    update-grub
+
+
+Now edit /etc/udev/rules.d/70-persistent-net.rules and make sure that the MAC address is aligned with the proper interface (this file may not exist).  Note:  This is only critical if you're planning on tearing down the systems and rebuilding it repeatedly, but it can't hurt.  At a minimum, write down the MAC address/interface mappings so that you can reproduce the same order later.
+
+This is the file for controller:
+
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="10:fe:ed:08:80:7f", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="p1p1"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="c0:4a:00:02:15:f8", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="p2p1"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="74:27:ea:5c:34:f9", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="em1"
+
+This is the file for network1:
+
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="68:05:ca:1f:2a:12", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="p1p1"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="c0:4a:00:02:70:4a", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="p2p1"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="ac:22:0b:8a:f3:49", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="em1"
+
+This is the file for compute1:
+
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="c0:4a:00:02:06:73", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="p1p1"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="10:fe:ed:03:ce:1b", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="p2p1"
+    SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="74:d0:2b:cb:7a:eb", ATTR{dev_id}=="0x0", ATTR{type}=="1", KERNEL=="eth*", NAME="em1"
+
+
+Modify the /etc/network/interfaces file on the controller.
+
+    # Controller interfaces
+
+    # internal interface (Mgmt)
+    auto p1p1
+    iface p1p1 inet static
+    address 192.168.100.210
+    netmask 255.255.255.0
+    gateway 192.168.100.1
+
+    # internal interface (Data)
+    auto p2p1
+    iface p2p1 inet static
+    address 10.10.10.210
+    netmask 255.255.255.0
+    gateway 10.10.10.1
+
+    # external interface (API)
+    auto em1
+    iface em1 inet static
+    address 10.40.10.210
+    netmask 255.255.255.0
+    gateway 10.40.10.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+
+Modify the /etc/network/interfaces file on network1.
+Note:  The external interface on the network node is initially commented out, replaced with a hard-coded external IP so that there is Internet access for installing packages.  This will need to be changed after the Neutron module is installed.
+
+    # Network1 interfaces
+
+    # internal interface (Mgmt)
+    auto p1p1
+    iface p1p1 inet static
+    address 192.168.100.220
+    netmask 255.255.255.0
+    gateway 192.168.100.1
+
+    # internal interface (Data)
+    auto p2p1
+    iface p2p1 inet static
+    address 10.10.10.220
+    netmask 255.255.255.0
+
+    # external interface (API)
+    #auto em1
+    #iface em1 inet manual
+    #    up ip link set dev $IFACE up
+    #    down ip link set dev $IFACE down
+
+    # temporary external interface (API)
+    auto em1
+    iface em1 inet static
+    address 10.40.10.220
+    netmask 255.255.255.0
+    gateway 10.40.10.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+    # Compute1 interfaces
+
+Modify the /etc/network/interfaces file on compute1.
+
+    # internal interface (Mgmt)
+    auto p1p1
+    iface p1p1 inet static
+    address 192.168.100.230
+    netmask 255.255.255.0
+    gateway 102.168.100.1
+
+    # internal interface (Data)
+    auto p2p1
+    iface p2p1 inet static
+    address 10.10.10.230
+    netmask 255.255.255.0
+
+    # external interface (API)
+    auto em1
+    iface em1 inet static
+    address 10.40.10.230
+    netmask 255.255.255.0
+    gateway 10.40.10.1
+    dns-nameservers 8.8.8.8 8.8.4.4
+
+
+Make sure we're getting the latest patches, and reboot the machines.
+
+    sudo -i
+
+    apt-get update
+    apt-get dist-upgrade
+    reboot
+
+
+Once the machines come back online you should be ready to start installing the services needed for OpenStack.  You can verify the networking is setup correctly by running the following from all machines.
+
+    ping controller
+    ping www.google.com

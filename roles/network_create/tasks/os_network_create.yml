@@ -1,0 +1,74 @@
+---
+
+- name: Create external network
+  shell: creates={{ neutron_external_network }}
+         /usr/bin/neutron --os-username=admin --os-password={{ admin_pass }} --os-tenant=admin --os-auth-url={{ service_endpoint }} net-create ext-net --shared --router:external=True
+- name: Mark external network created
+  lineinfile: dest={{ neutron_external_network }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create external subnet
+  shell: creates={{ neutron_external_subnet }}
+         /usr/bin/neutron --os-username=admin --os-password={{ admin_pass }} --os-tenant=admin --os-auth-url={{ service_endpoint }} subnet-create ext-net --name ext-subnet --allocation-pool start={{ external_subnet }}.{{ guest_network_start }},end={{ external_subnet }}.{{ guest_network_end }} --disable-dhcp --gateway {{ external_gateway }} {{ external_cidr }}
+- name: Mark external subnet created
+  lineinfile: dest={{ neutron_external_subnet }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create demo network
+  shell: creates={{ neutron_demo_network }}
+         /usr/bin/neutron --os-username=demo --os-password={{ demo_pass }} --os-tenant=demo --os-auth-url={{ service_endpoint }} net-create demo-net
+- name: Mark demo network created
+  lineinfile: dest={{ neutron_demo_network }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create demo subnet
+  shell: creates={{ neutron_demo_subnet }}
+         /usr/bin/neutron --os-username=demo --os-password={{ demo_pass }} --os-tenant=demo --os-auth-url={{ service_endpoint }} subnet-create demo-net --name demo-subnet --gateway {{ guest_gateway }} {{ guest_cidr }}
+- name: Mark demo subnet created
+  lineinfile: dest={{ neutron_demo_subnet }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create demo router
+  shell: creates={{ neutron_demo_router }}
+         /usr/bin/neutron --os-username=demo --os-password={{ demo_pass }} --os-tenant=demo --os-auth-url={{ service_endpoint }} router-create demo-router
+- name: Mark demo router created
+  lineinfile: dest={{ neutron_demo_router }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add demo router interface
+  shell: creates={{ neutron_demo_router_interface }}
+         /usr/bin/neutron --os-username=demo --os-password={{ demo_pass }} --os-tenant=demo --os-auth-url={{ service_endpoint }} router-interface-add demo-router demo-subnet
+- name: Mark demo router interface added
+  lineinfile: dest={{ neutron_demo_router_interface }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add demo router gateway
+  shell: creates={{ neutron_demo_router_gateway }}
+         /usr/bin/neutron --os-username=demo --os-password={{ demo_pass }} --os-tenant=demo --os-auth-url={{ service_endpoint }} router-gateway-set demo-router ext-net
+- name: Mark demo router gateway added
+  lineinfile: dest={{ neutron_demo_router_gateway }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add keypair
+  shell: creates={{ nova_keypair_add }}
+         /usr/bin/nova --os-username=admin --os-password={{ admin_pass }} --os-tenant=admin --os-auth-url={{ service_endpoint }} keypair-add --pub-key {{ keypair_file | expanduser }} demo-key
+- name: Mark keypair added
+  lineinfile: dest={{ nova_keypair_add }}
+              line=done
+              state=present
+              create=yes
+

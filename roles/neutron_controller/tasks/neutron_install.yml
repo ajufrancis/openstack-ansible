@@ -15,7 +15,6 @@
               create=yes
   with_items:
     - "{{ conf_file }}"
-    - "{{ conf2_file }}"
     - "{{ conf4_file }}"
   notify: restart neutron controller
 
@@ -149,13 +148,13 @@
   with_nested:
     - ["{{ conf2_file }}"]
     - [
-      {option: tunnel_id_ranges, value: "1:1000"],
+      {option: tunnel_id_ranges, value: "1:1000"},
       ]
   notify: restart neutron controller
 
 - name: Configure ML2 plugin security group
   ini_file: dest={{ item[0] }}
-            section=security_group
+            section=securitygroup
             option={{item[1].option}}
             value={{item[1].value}}
             backup=yes
@@ -174,7 +173,7 @@
             value={{item[1].value}}
             backup=yes
   with_nested:
-    - ["{{ conf_file }}"]
+    - ["{{ conf4_file }}"]
     - [
       {option: network_api_class, value: nova.network.neutronv2.api.API},
       {option: neutron_url, value: "http://controller:9696"},
@@ -189,6 +188,20 @@
       ]
   notify: restart neutron controller
 
+- name: Configure network metadata
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf4_file }}"]
+    - [
+      {option: service_neutron_metadata_proxy, value: true},
+      {option: neutron_metadata_proxy_shared_secret, value: "{{ metadata_secret }}"},
+      ]
+  notify: restart neutron controller
+
 # until a way to trigger the notify's after a task is done is found,
 # this'll have to do - we need to restart before the next task starts
 - name: Restart neutron controller
@@ -199,6 +212,7 @@
     - nova-scheduler
     - nova-conductor
     - neutron-server
+# this one may not be necessary
     - neutron-plugin-ml2
 - name: Mark neutron controller restarted
   lineinfile: dest={{ neutron_controller_restarted }}
