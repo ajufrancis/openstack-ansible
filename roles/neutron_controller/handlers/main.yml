@@ -7,6 +7,4 @@
     - nova-scheduler
     - nova-conductor
     - neutron-server
-# this one may not be necessary
-    - neutron-plugin-ml2
 

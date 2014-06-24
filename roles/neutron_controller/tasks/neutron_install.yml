@@ -79,7 +79,7 @@
   notify: restart neutron controller
 
 - name: Get the service id
-  shell: /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} keystone tenant-get service | awk '/ id / {print $4}'
+  shell: /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} tenant-get service | awk '/ id / {print $4}'
   register: service_id
 - name: Configure compute for network topology changes
   ini_file: dest={{ item[0] }}
@@ -212,8 +212,6 @@
     - nova-scheduler
     - nova-conductor
     - neutron-server
-# this one may not be necessary
-    - neutron-plugin-ml2
 - name: Mark neutron controller restarted
   lineinfile: dest={{ neutron_controller_restarted }}
               line=done

@@ -14,11 +14,11 @@
       {regexp: net\.ipv4\.conf\.all\.rp_filter, line: net.ipv4.conf.all.rp_filter=0},
       {regexp: net\.ipv4\.conf\.default\.rp_filter, line: net.ipv4.conf.default.rp_filter=0},
       ]
-  notify: sysctl
-- name: Run sysctl
+  notify: reload sysctl
+- name: Reload sysctl
   shell: creates={{ neutron_sysctl }}
          sysctl -p
-- name: Mark sysctl
+- name: Mark sysctl reloaded
   lineinfile: dest={{ neutron_sysctl }}
               line=done
               state=present

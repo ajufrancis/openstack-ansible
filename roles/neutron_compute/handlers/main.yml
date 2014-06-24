@@ -1,6 +1,6 @@
 ---
 
-- name: restart neutron network
+- name: restart neutron compute
   service: name={{ item }} state=restarted
   with_items:
     - nova-compute

@@ -1,7 +1,7 @@
 ---
 
 - name: Create neutron database
-  mysql_db: db=nova
+  mysql_db: db=neutron
             state=present
             encoding=utf8
             login_user={{ mysql_root_user }}
@@ -16,7 +16,7 @@
               name=neutron
               password={{ neutron_dbpass }}
               host={{ item }}
-              priv=nova.*:ALL,GRANT
+              priv=neutron.*:ALL,GRANT
   with_items:
     - localhost
     - "%"
