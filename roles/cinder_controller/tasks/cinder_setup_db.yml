@@ -1,0 +1,34 @@
+---
+
+- name: Create cinder database
+  mysql_db: db=cinder
+            state=present
+            encoding=utf8
+            login_user={{ mysql_root_user }}
+            login_password={{ mysql_root_password }}
+  notify: restart cinder controller
+
+- name: Grant access to cinder user
+  mysql_user: login_user={{ mysql_root_user }}
+              login_password={{ mysql_root_password }}
+              login_port=3306
+              state=present
+              name=cinder
+              password={{ cinder_dbpass }}
+              host={{ item }}
+              priv=cinder.*:ALL,GRANT
+  with_items:
+    - localhost
+    - "%"
+  notify: restart cinder controller
+
+- name: Create cinder tables
+  shell: creates={{ cinder_tables_created }}
+         su -s /bin/sh -c "cinder-manage db sync" cinder
+  notify: restart cinder controller
+- name: Mark tables as created
+  lineinfile: dest={{ cinder_tables_created }}
+              line=done
+              state=present
+              create=yes
+

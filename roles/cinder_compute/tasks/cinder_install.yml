@@ -1,0 +1,108 @@
+---
+
+- name: Install cinder Block Volume service on compute
+  apt: name={{ item }} state=present
+  with_items:
+    - cinder-volume
+
+- name: Make sure default section exists in conf files
+  lineinfile: dest={{ item }}
+              regexp="^(\[default\]|\[DEFAULT\])$"
+              insertbefore=BOF
+              line=[DEFAULT]
+              backup=yes
+              create=yes
+  with_items:
+    - "{{ conf_file }}"
+  notify: restart cinder compute
+
+- name: Configure db conn
+  ini_file: dest={{ item[0] }}
+            section=database
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: connection, value: "mysql://cinder:{{ cinder_dbpass }}@controller/cinder"},
+      ]
+  notify: restart cinder compute
+
+# This wasn't in the instructions, so I'm leaving it out
+#- name: Configure strategy
+#  ini_file: dest={{ item[0] }}
+#            section=DEFAULT
+#            option={{item[1].option}}
+#            value={{item[1].value}}
+#            backup=yes
+#  with_nested:
+#    - ["{{ conf_file }}"]
+#    - [
+#      {option: auth_strategy, value: keystone},
+#      ]
+#  notify: restart cinder compute
+
+- name: Configure keystone authtoken
+  ini_file: dest={{ item[0] }}
+            section=keystone_authtoken
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: auth_uri, value: "http://controller:5000"},
+      {option: auth_host, value: controller},
+      {option: auth_port, value: 35357},
+      {option: auth_protocol, value: http},
+      {option: admin_tenant_name, value: service},
+      {option: admin_user, value: cinder},
+      {option: admin_password, value: "{{ cinder_pass }}"},
+      ]
+  notify: restart cinder compute
+
+- name: Configure rabbit rpc
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: rpc_backend, value: cinder.openstack.common.rpc.impl_kombu},
+      {option: rabbit_host, value: controller},
+      {option: rabbit_port, value: 5672},
+      {option: rabbit_userid, value: guest},
+      {option: rabbit_password, value: "{{ rabbit_pass }}"},
+      ]
+  notify: restart cinder compute
+
+- name: Configure block service to use image service
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: glance_host, value: controller},
+      ]
+  notify: restart cinder compute
+
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart cinder compute
+  shell: creates={{ cinder_compute_restarted }}
+         service {{ item }} restart
+  with_items:
+    - cinder-volume
+    - tgt
+- name: Mark cinder compute restarted
+  lineinfile: dest={{ cinder_compute_restarted }}
+              line=done
+              state=present
+              create=yes
+

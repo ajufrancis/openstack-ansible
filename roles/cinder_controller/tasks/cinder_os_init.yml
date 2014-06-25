@@ -1,0 +1,78 @@
+---
+
+- name: Create cinder user
+  shell: creates={{ cinder_user_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-create --name=cinder --pass={{ cinder_pass }} --email=cinder_email@example.com
+- name: Mark cinder user as created
+  lineinfile: dest={{ cinder_user_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add cinder admin role
+  shell: creates={{ cinder_admin_role }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} user-role-add --user=cinder --tenant=service --role=admin
+- name: Mark cinder admin roll as added
+  lineinfile: dest={{ cinder_admin_role }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create Block Storage service
+  shell: creates={{ cinder_service_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=cinder --type=volume --description="OpenStack Block Storage"
+- name: Mark block storage service as created
+  lineinfile: dest={{ cinder_service_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Get the Block Storage service id
+  shell: creates={{ cinder_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ volume / {print $2}'
+  register: cinder_service_id
+- name: Create block storage endpoint
+  shell: creates={{ cinder_endpoint_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ cinder_service_id['stdout_lines'][0] }} --publicurl=http://controller:8776/v1/%\(tenant_id\)s --internalurl=http://controller:8776/v1/%\(tenant_id\)s --adminurl=http://controller:8776/v1/%\(tenant_id\)s
+- name: Mark block storage endpoint as created
+  lineinfile: dest={{ cinder_endpoint_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create Block Storage V2 service
+  shell: creates={{ cinder_service_v2_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-create --name=cinderv2 --type=volumev2 --description="OpenStack Block Storage v2"
+- name: Mark block storage service as created
+  lineinfile: dest={{ cinder_service_v2_created }}
+              line=done
+              state=present
+              create=yes
+
+- name: Get the Block Storage V2 service id
+  shell: creates={{ cinder_endpoint_v2_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} service-list | awk '/ volumev2 / {print $2}'
+  register: cinder_service_id_v2
+- name: Create block storage V2 endpoint
+  shell: creates={{ cinder_endpoint_v2_created }}
+         /usr/bin/keystone --os-token={{ service_token }} --os-endpoint={{ service_endpoint }} endpoint-create --service-id={{ cinder_service_id_v2['stdout_lines'][0] }} --publicurl=http://controller:8776/v2/%\(tenant_id\)s --internalurl=http://controller:8776/v2/%\(tenant_id\)s --adminurl=http://controller:8776/v2/%\(tenant_id\)s
+- name: Mark block storage endpoint as created
+  lineinfile: dest={{ cinder_endpoint_v2_created }}
+              line=done
+              state=present
+              create=yes
+
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart cinder controller
+  shell: creates={{ cinder_controller_restarted }}
+         service {{ item }} restart
+  with_items:
+    - cinder-scheduler
+    - cinder-api
+- name: Mark cinder controller restarted
+  lineinfile: dest={{ cinder_controller_restarted }}
+              line=done
+              state=present
+              create=yes
+

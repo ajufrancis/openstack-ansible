@@ -1,0 +1,4 @@
+---
+- include: cinder_install.yml
+- include: cinder_setup_db.yml
+- include: cinder_os_init.yml

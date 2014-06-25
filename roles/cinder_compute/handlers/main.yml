@@ -1,0 +1,8 @@
+---
+
+- name: restart cinder compute
+  service: name={{ item }} state=restarted
+  with_items:
+    - cinder-volume
+    - tgt
+

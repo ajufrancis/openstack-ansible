@@ -159,3 +159,38 @@
   roles:
     - network_create
 
+- name: Deploy and Configure the Dashboard Service (controller)
+  hosts: controller
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - horizon
+
+  roles:
+    - horizon
+
+- name: Deploy and Configure the Block Storage Service (controller part)
+  hosts: controller
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - cinder
+    - cinder_controller
+
+  roles:
+    - cinder_controller
+
+- name: Deploy and Configure the Block Storage Service (compute part)
+  hosts: compute
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - cinder
+    - cinder_compute
+
+  roles:
+    - cinder_compute
+

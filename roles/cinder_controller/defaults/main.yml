@@ -1,0 +1,7 @@
+---
+
+conf_dir: "{{ cinder_conf_dir }}"
+
+conf_name: cinder.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+

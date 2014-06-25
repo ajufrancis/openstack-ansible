@@ -1,0 +1,35 @@
+---
+
+- name: Install cinder Block Volume service on compute
+  apt: name={{ item }} state=present
+  with_items:
+    - lvm2
+
+- name: Create LVM physical volume
+  shell: creates={{ lvm_pvcreate }}
+         /sbin/pvcreate /dev/{{ compute1_cinder_volume_dev }}
+- name: Mark lvm physical volume created
+  lineinfile: dest={{ lvm_pvcreate }}
+              line=done
+              state=present
+              create=yes
+
+- name: Create cinder volume
+  shell: creates={{ lvm_vgcreate }}
+         /sbin/vgcreate cinder-volumes /dev/{{ compute1_cinder_volume_dev }}
+- name: Mark lvm physical volume created
+  lineinfile: dest={{ lvm_vgcreate }}
+              line=done
+              state=present
+              create=yes
+
+- name: Set LVM filter
+  lineinfile: dest={{ item }}
+              regexp="^ [ ]*filter = "
+              line="    filter = [ \"a/{{ compute1_root_volume_dev}}/\", \"a/{{compute1_cinder_volume_dev }}/\", \"r/.*/\" ]"
+              backup=yes
+              create=yes
+  with_items:
+    - "{{ conf2_file }}"
+  notify: restart cinder compute
+

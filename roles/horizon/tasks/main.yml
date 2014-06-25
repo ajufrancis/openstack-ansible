@@ -1,0 +1,3 @@
+---
+- include: horizon_install.yml
+- include: horizon_setup_db.yml

@@ -1,0 +1,3 @@
+---
+- include: lvm_install.yml
+- include: cinder_install.yml

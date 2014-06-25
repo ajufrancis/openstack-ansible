@@ -135,3 +135,27 @@ neutron_demo_subnet: "{{ work_dir }}/{{ neutron_prefix }}_demo_subnet"
 neutron_demo_router: "{{ work_dir }}/{{ neutron_prefix }}_demo_router"
 neutron_demo_router_interface: "{{ work_dir }}/{{ neutron_prefix }}_demo_router_interface"
 neutron_demo_router_gateway: "{{ work_dir }}/{{ neutron_prefix }}_demo_router_gateway"
+
+# horizon stuff
+horizon_conf_dir: "/etc/openstack-dashboard"
+horizon_prefix: ".horizon"
+horizon_restarted: "{{ work_dir }}/{{ horizon_prefix }}_restarted"
+
+# cinder stuff
+cinder_conf_dir: "/etc/cinder"
+cinder_prefix: ".cinder"
+cinder_controller_restarted: "{{ work_dir }}/{{ cinder_prefix }}_controller_restarted"
+cinder_compute_restarted: "{{ work_dir }}/{{ cinder_prefix }}_compute_restarted"
+cinder_tables_created: "{{ work_dir }}/{{ cinder_prefix }}_tables"
+
+cinder_user_created: "{{ work_dir }}/{{ cinder_prefix }}_user"
+cinder_admin_role: "{{ work_dir }}/{{ cinder_prefix }}_admin_role"
+cinder_service_created: "{{ work_dir }}/{{ cinder_prefix }}_service"
+cinder_endpoint_created: "{{ work_dir }}/{{ cinder_prefix }}_endpoint"
+cinder_service_v2_created: "{{ work_dir }}/{{ cinder_prefix }}_service_v2"
+cinder_endpoint_v2_created: "{{ work_dir }}/{{ cinder_prefix }}_endpoint_v2"
+
+lvm_conf_dir: "/etc/lvm"
+lvm_prefix: ".lvm"
+lvm_pvcreate: "{{ work_dir }}/{{ lvm_prefix }}_pvcreate"
+lvm_vgcreate: "{{ work_dir }}/{{ lvm_prefix }}_vgcreate"

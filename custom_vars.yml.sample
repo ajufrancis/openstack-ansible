@@ -48,6 +48,11 @@ metadata_secret: METADATA_SECRET
 
 keypair_file: ~/.ssh/id_rsa.pub
 
+# get this by running pvdisplay on the compute node
+compute1_root_volume_dev: sdb3
+# get this by running 'lshw -class disk' on the compute node
+compute1_cinder_volume_dev: sda
+
 # ansible stuff
 # remote_user is the login of the remote machines
 remote_user: tesora

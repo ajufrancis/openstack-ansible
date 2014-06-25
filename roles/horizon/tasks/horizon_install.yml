@@ -1,0 +1,44 @@
+---
+
+- name: Install horizon Dashboard service on controller
+  apt: name={{ item }} state=present
+  with_items:
+    - apache2
+    - memcached
+    - python-memcached
+    - libapache2-mod-wsgi
+    - openstack-dashboard
+
+- name: Remove openstack dashboard theme
+  apt: name={{ item }} state=absent purge=yes
+  with_items:
+    - openstack-dashboard-ubuntu-theme
+
+- name: Configure horizon
+  lineinfile: dest={{ item[0] }}
+              regexp="{{item[1].regexp}}"
+              line="{{item[1].line}}"
+              insertafter="{{item[1].insertafter}}"
+              backup=yes
+              create=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {regexp: "OPENSTACK_HOST[ =]", line: "OPENSTACK_HOST = \\\"controller\\\"", insertafter: ALLOWED_HOSTS},
+      ]
+  notify: restart horizon
+
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart horizon
+  shell: creates={{ horizon_restarted }}
+         service {{ item }} restart
+  with_items:
+    - apache2
+    - memcached
+- name: Mark horizon restarted
+  lineinfile: dest={{ horizon_restarted }}
+              line=done
+              state=present
+              create=yes
+

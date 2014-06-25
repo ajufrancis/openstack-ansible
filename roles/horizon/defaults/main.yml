@@ -1,0 +1,7 @@
+---
+
+conf_dir: "{{ horizon_conf_dir }}"
+
+conf_name: local_settings.py
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+
