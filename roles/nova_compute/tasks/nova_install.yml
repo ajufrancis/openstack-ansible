@@ -34,6 +34,19 @@
     - "{{ conf_file }}"
   notify: restart nova compute
 
+- name: Configure strategy
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: auth_strategy, value: keystone},
+      ]
+  notify: restart nova compute
+
 - name: Configure db conn
   ini_file: dest={{ item[0] }}
             section=database
@@ -44,38 +57,6 @@
     - ["{{ conf_file }}"]
     - [
       {option: connection, value: "mysql://nova:{{ nova_dbpass }}@controller/nova"},
-      ]
-  notify: restart nova compute
-
-- name: Configure rabbit rpc
-  ini_file: dest={{ item[0] }}
-            section=DEFAULT
-            option={{ item[1].option }}
-            value={{ item[1].value }}
-            backup=yes
-  with_nested:
-    - ["{{ conf_file }}"]
-    - [
-      {option: rpc_backend, value: rabbit},
-      {option: rabbit_host, value: controller},
-      {option: rabbit_password, value: "{{ rabbit_pass }}"},
-      ]
-  notify: restart nova compute
-
-- name: Configure IPs
-  ini_file: dest={{ item[0] }}
-            section=DEFAULT
-            option={{ item[1].option }}
-            value={{ item[1].value }}
-            backup=yes
-  with_nested:
-    - ["{{ conf_file }}"]
-    - [
-      {option: my_ip, value: "{{ compute1_mgmt_ip }}"},
-      {option: vnc_enabled, value: True},
-      {option: vncserver_listen, value: 0.0.0.0},
-      {option: vncserver_proxyclient_address, value: "{{ compute1_mgmt_ip }}"},
-      {option: novncproxy_base_url, value: "http://controller:6080/vnc_auto.html"},
       ]
   notify: restart nova compute
 
@@ -98,16 +79,48 @@
       ]
   notify: restart nova compute
 
-- name: Configure strategy
+- name: Configure rabbit rpc
   ini_file: dest={{ item[0] }}
             section=DEFAULT
-            option={{item[1].option}}
-            value={{item[1].value}}
+            option={{ item[1].option }}
+            value={{ item[1].value }}
             backup=yes
   with_nested:
     - ["{{ conf_file }}"]
     - [
-      {option: auth_strategy, value: keystone},
+      {option: rpc_backend, value: rabbit},
+      {option: rabbit_host, value: controller},
+      {option: rabbit_password, value: "{{ rabbit_pass }}"},
+      ]
+  notify: restart nova compute
+
+- name: Configure remote console access
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: my_ip, value: "{{ compute1_mgmt_ip }}"},
+      {option: vnc_enabled, value: True},
+      {option: vncserver_listen, value: 0.0.0.0},
+      {option: vncserver_proxyclient_address, value: "{{ compute1_mgmt_ip }}"},
+      {option: novncproxy_base_url, value: "http://controller:6080/vnc_auto.html"},
+      ]
+  notify: restart nova compute
+
+- name: Configure for image service
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{ item[1].option }}
+            value={{ item[1].value }}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: glance_host, value: controller},
       ]
   notify: restart nova compute
 

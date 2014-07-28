@@ -105,7 +105,7 @@
   notify: restart neutron compute
 
 - name: Configure network service providers
-  ini_file: dest={{ item[0] }}
+  ini_file: dest={{ item }}
             section=service_providers
             state=absent
             backup=yes
