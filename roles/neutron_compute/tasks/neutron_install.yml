@@ -150,7 +150,7 @@
   with_nested:
     - ["{{ conf2_file }}"]
     - [
-      {option: local_ip, value: "{{ network1_data_ip }}"},
+      {option: local_ip, value: "{{ compute1_data_ip }}"},
       {option: tunnel_type, value: gre},
       {option: enable_tunneling, value: True},
       ]

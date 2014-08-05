@@ -46,6 +46,19 @@
     - "{{ conf7_file }}"
   notify: restart neutron network
 
+- name: Configure db conn
+  ini_file: dest={{ item[0] }}
+            section=database
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - ["{{ conf_file }}"]
+    - [
+      {option: connection, value: "mysql://neutron:{{ neutron_dbpass }}@controller/neutron"},
+      ]
+  notify: restart neutron network
+
 - name: Configure strategy
   ini_file: dest={{ item[0] }}
             section=DEFAULT
@@ -142,6 +155,7 @@
     - [
       {option: interface_driver, value: neutron.agent.linux.interface.OVSInterfaceDriver},
       {option: dhcp_driver, value: neutron.agent.linux.dhcp.Dnsmasq},
+      {option: dnsmasq_dns_server, value: "{{ dns_nameserver_ip }}",
       {option: use_namespaces, value: True},
       ]
   notify: restart neutron network

@@ -13,6 +13,7 @@ compute1_machine_ip: 230
 management_interface: p1p1
 data_interface: p2p1
 external_interface: em1
+dns_nameserver_ip: 8.8.8.8
 
 # guest network info
 guest_network_start: 160

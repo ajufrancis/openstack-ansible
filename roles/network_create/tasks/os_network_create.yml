@@ -11,7 +11,7 @@
 
 - name: Create external subnet
   shell: creates={{ neutron_external_subnet }}
-         /usr/bin/neutron --os-username=admin --os-password={{ admin_pass }} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} subnet-create ext-net --name ext-subnet --allocation-pool start={{ external_subnet }}.{{ guest_network_start }},end={{ external_subnet }}.{{ guest_network_end }} --disable-dhcp --gateway {{ external_gateway }} {{ external_cidr }}
+         /usr/bin/neutron --os-username=admin --os-password={{ admin_pass }} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} subnet-create ext-net --name ext-subnet --allocation-pool start={{ external_subnet }}.{{ guest_network_start }},end={{ external_subnet }}.{{ guest_network_end }} --disable-dhcp --dns-nameserver {{ dns_nameserver_ip }} --gateway {{ external_gateway }} {{ external_cidr }}
 - name: Mark external subnet created
   lineinfile: dest={{ neutron_external_subnet }}
               line=done
