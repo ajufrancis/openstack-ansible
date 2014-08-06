@@ -11,9 +11,9 @@
     - keystone
     - glance
     - nova
+    - neutron
     - common
     - os_setup
-
   roles:
     - common
 
@@ -25,7 +25,6 @@
   tags:
     - common
     - neutron
-
   roles:
     - common
 
@@ -37,7 +36,6 @@
   tags:
     - common
     - nova
-
   roles:
     - common
 
@@ -49,7 +47,6 @@
   tags:
     - db
     - os_setup
-
   roles:
     - db
 
@@ -63,7 +60,6 @@
     - rabbit
     - rabbitmq
     - os_setup
-
   roles:
     - mq
 
@@ -73,7 +69,6 @@
   vars_files:
     - custom_vars.yml
   tags: keystone
-
   roles:
     - keystone
 
@@ -83,9 +78,19 @@
   vars_files:
     - custom_vars.yml
   tags: glance
-
   roles:
     - glance
+
+- name: Upload Images to the Image Service
+  hosts: controller
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - glance
+    - glance_upload
+  roles:
+    - glance_upload
 
 - name: Deploy and Configure the Compute Service (controller part)
   hosts: controller
@@ -95,7 +100,6 @@
   tags:
     - nova
     - nova_controller
-
   roles:
     - nova_controller
 
@@ -107,7 +111,6 @@
   tags:
     - nova
     - nova_compute
-
   roles:
     - nova_compute
 
@@ -119,7 +122,6 @@
   tags:
     - neutron
     - neutron_controller
-
   roles:
     - neutron_controller
 
@@ -131,7 +133,6 @@
   tags:
     - neutron
     - neutron_network
-
   roles:
     - neutron_network
 
@@ -143,7 +144,6 @@
   tags:
     - neutron
     - neutron_compute
-
   roles:
     - neutron_compute
 
@@ -155,7 +155,6 @@
   tags:
     - neutron
     - network_create
-
   roles:
     - network_create
 
@@ -166,7 +165,6 @@
     - custom_vars.yml
   tags:
     - horizon
-
   roles:
     - horizon
 
@@ -178,7 +176,6 @@
   tags:
     - cinder
     - cinder_controller
-
   roles:
     - cinder_controller
 
@@ -190,7 +187,6 @@
   tags:
     - cinder
     - cinder_compute
-
   roles:
     - cinder_compute
 

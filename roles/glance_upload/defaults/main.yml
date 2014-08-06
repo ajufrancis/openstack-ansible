@@ -1,0 +1,4 @@
+---
+
+conf_dir: "{{ glance_conf_dir }}"
+

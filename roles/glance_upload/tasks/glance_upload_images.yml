@@ -18,7 +18,7 @@
 - name: Upload ubuntu image
   shell: creates={{ glance_ubuntu_uploaded }}
          /usr/bin/glance --os-username=admin --os-password={{ admin_pass}} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} image-create --name "ubuntu" --disk-format qcow2 --container-format bare --is-public True --progress < {{ glance_ubuntu_image }}
-- name: Mark cirrus image uploaded
+- name: Mark ubuntu image uploaded
   lineinfile: dest={{ glance_ubuntu_uploaded }}
               line=done
               state=present
