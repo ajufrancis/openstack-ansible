@@ -1,0 +1,26 @@
+---
+
+- name: Download cirros image
+  command: creates={{ glance_cirros_image }}
+           wget http://cdn.download.cirros-cloud.net/0.3.2/cirros-0.3.2-x86_64-disk.img -O {{ glance_cirros_image }}
+- name: Upload cirros image
+  shell: creates={{ glance_cirros_uploaded }}
+         /usr/bin/glance --os-username=admin --os-password={{ admin_pass}} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} image-create --name "cirros" --disk-format qcow2 --container-format bare --is-public True --progress < {{ glance_cirros_image }}
+- name: Mark cirrus image uploaded
+  lineinfile: dest={{ glance_cirros_uploaded }}
+              line=done
+              state=present
+              create=yes
+
+- name: Download ubuntu image
+  command: creates={{ glance_ubuntu_image }}
+           wget https://cloud-images.ubuntu.com/trusty/current/trusty-server-cloudimg-amd64-disk1.img -O {{ glance_ubuntu_image }}
+- name: Upload ubuntu image
+  shell: creates={{ glance_ubuntu_uploaded }}
+         /usr/bin/glance --os-username=admin --os-password={{ admin_pass}} --os-tenant-name=admin --os-auth-url={{ service_endpoint }} image-create --name "ubuntu" --disk-format qcow2 --container-format bare --is-public True --progress < {{ glance_ubuntu_image }}
+- name: Mark cirrus image uploaded
+  lineinfile: dest={{ glance_ubuntu_uploaded }}
+              line=done
+              state=present
+              create=yes
+

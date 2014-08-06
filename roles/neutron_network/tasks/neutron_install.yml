@@ -155,7 +155,7 @@
     - [
       {option: interface_driver, value: neutron.agent.linux.interface.OVSInterfaceDriver},
       {option: dhcp_driver, value: neutron.agent.linux.dhcp.Dnsmasq},
-      {option: dnsmasq_dns_server, value: "{{ dns_nameserver_ip }}",
+      {option: dnsmasq_dns_server, value: "{{ dns_nameserver_ip }}"},
       {option: use_namespaces, value: True},
       ]
   notify: restart neutron network

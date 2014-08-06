@@ -2,3 +2,4 @@
 - include: glance_install.yml
 - include: glance_setup_db.yml
 - include: glance_os_init.yml
+- include: glance_upload_images.yml
