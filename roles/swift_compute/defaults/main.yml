@@ -1,0 +1,16 @@
+---
+
+conf_dir: "{{ swift_conf_dir }}"
+
+conf_name: swift.conf
+conf_file: "{{ conf_dir }}/{{ conf_name }}"
+
+conf_name2: rsyncd.conf
+conf_file2: "/etc/{{ conf_name2 }}"
+
+conf_name3: rsync
+conf_file3: "/etc/default/{{ conf_name3 }}"
+
+conf_name4: proxy-server.conf
+conf_file4: "{{ conf_dir }}/{{ conf_name4 }}"
+

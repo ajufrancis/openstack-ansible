@@ -12,6 +12,8 @@
     - glance
     - nova
     - neutron
+    - cinder
+    - swift
     - common
     - os_setup
   roles:
@@ -36,6 +38,8 @@
   tags:
     - common
     - nova
+    - cinder
+#    - swift
   roles:
     - common
 
@@ -189,4 +193,65 @@
     - cinder_compute
   roles:
     - cinder_compute
+
+- name: Configure the Object Storage common elements
+  hosts:
+    - controller
+    - compute
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - swift
+    - swift_common
+    - swift_controller
+    - swift_compute
+    - swift_controller_proxy
+    - swift_compute_start
+  roles:
+    - swift_common
+
+- name: Deploy and Configure the Object Storage Service (controller part)
+  hosts: controller
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - swift
+    - swift_controller
+  roles:
+    - swift_controller
+
+- name: Deploy and Configure the Object Storage Service (compute part)
+  hosts: compute
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - swift
+    - swift_compute
+  roles:
+    - swift_compute
+
+- name: Deploy and Configure the Object Proxy Service (controller part)
+  hosts: controller
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - swift
+    - swift_controller_proxy
+  roles:
+    - swift_controller_proxy
+
+- name: Start the Object Storage Service (compute part)
+  hosts: compute
+  user: "{{ remote_user }}"
+  vars_files:
+    - custom_vars.yml
+  tags:
+    - swift
+    - swift_compute_start
+  roles:
+    - swift_compute_start
 

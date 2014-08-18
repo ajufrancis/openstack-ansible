@@ -1,0 +1,2 @@
+---
+- include: swift_hash_setup.yml

@@ -1,0 +1,93 @@
+---
+
+- name: Install swift Proxy service on controller
+  apt: name={{ item }} state=present
+  with_items:
+    - swift
+    - swift-proxy
+    - memcached
+    - python-keystoneclient
+    - python-swiftclient
+    - python-webob
+
+- name: Configure memcached
+  lineinfile: dest={{ item }}
+              regexp="-l 127.0.0.1"
+              insertbefore=BOF
+              line="-l {{ controller_data_ip }}"
+              backup=yes
+              create=yes
+  with_items:
+    - "{{ conf_file5 }}"
+  notify: restart swift controller proxy
+
+- name: Create {{ conf_name4 }}
+  template: src={{ conf_name4 }}.j2 dest={{ conf_file4 }}
+
+- name: Create swift rings
+  shell: chdir={{ conf_dir }}
+              creates={{ swift_create_rings }}
+              /usr/bin/swift-ring-builder {{ item }} create {{ compute1_swift_partition_power }} {{ compute1_swift_replicas }} {{ compute1_swift_move_restrict }}
+  with_items:
+    - "account.builder"
+    - "container.builder"
+    - "object.builder"
+  notify: restart swift controller proxy
+- name: Mark swift rings created
+  lineinfile: dest={{ swift_create_rings }}
+              line=done
+              state=present
+              create=yes
+
+- name: Add swift ring entries
+  shell: chdir={{ conf_dir }}
+              creates={{ swift_ring_entries }}
+              /usr/bin/swift-ring-builder {{ item.file }} add z1-{{ compute1_data_ip }}:{{ item.port }}/{{ compute1_swift_volume_dev }}1 100
+  with_items:
+    - { file: "account.builder", port: 6002 }
+    - { file: "container.builder", port: 6001 }
+    - { file: "object.builder", port: 6000 }
+  notify: restart swift controller proxy
+- name: Mark swift ring entries added
+  lineinfile: dest={{ swift_ring_entries }}
+              line=done
+              state=present
+              create=yes
+
+- name: Rebalance swift rings
+  shell: chdir={{ conf_dir }}
+              creates={{ swift_rebalance_rings }}
+              /usr/bin/swift-ring-builder {{ item }} rebalance
+  with_items:
+    - "account.builder"
+    - "container.builder"
+    - "object.builder"
+  notify: restart swift controller proxy
+- name: Mark swift rings rebalanced
+  lineinfile: dest={{ swift_rebalance_rings }}
+              line=done
+              state=present
+              create=yes
+
+- name: Push swift rings to object node
+  local_action: rsync -avz {{ conf_dir }}/{{ item }} {{ remote_user }}@{{ hostvars['compute1']:{{ conf_dif }}/{{ item }}
+  with_items:
+    - "account.ring.gz"
+    - "container.ring.gz"
+    - "object.ring.gz"
+  notify: restart swift controller proxy
+
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart swift controller proxy
+  shell: creates={{ swift_controller_proxy_restarted }}
+         service {{ item }} restart
+  with_items:
+    - memcached
+    - swift-proxy
+- name: Mark swift compute restarted
+  lineinfile: dest={{ swift_controller_proxy_restarted }}
+              line=done
+              state=present
+              create=yes
+

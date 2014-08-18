@@ -1,0 +1,60 @@
+---
+
+- name: Install swift Object Storage service on compute
+  apt: name={{ item }} state=present
+  with_items:
+    - swift
+    - swift-account
+    - swift-container
+    - swift-object
+    - xfsprogs
+
+# Once we have a dedicated disk, we should set it up with the following commands:
+#   fdisk /dev/sdb
+#   mkfs.xfs /dev/sdb1
+#   echo "/dev/sdb1 /srv/node/sdb1 xfs noatime,nodiratime,nobarrier,logbufs=8 0 0" >> /etc/fstab
+#   mkdir -p /srv/node/sdb1
+#   mount /srv/node/sdb1
+#   chown -R swift:swift /srv/node
+# but for now, just create the directory
+- name: Create swift storage directory
+  file: dest=/srv/node/{{ compute1_swift_volume_dev }}1
+        state=directory
+        owner=swift
+        group=swift
+        mode=0775
+
+- name: Create {{ conf_name2 }}
+  template: src={{ conf_name2 }}.j2 dest={{ conf_file2 }}
+
+- name: Enable rsync
+  lineinfile: dest={{ item }}
+              regexp="RSYNC_ENABLE"
+              insertbefore=BOF
+              line=RSYNC_ENABLE=true
+              backup=yes
+              create=yes
+  with_items:
+    - "{{ conf_file3 }}"
+  notify: restart swift compute
+
+- name: Create swift recon directory
+  file: dest=/var/swift/recon
+        state=directory
+        owner=swift
+        group=swift
+        mode=0775
+
+# until a way to trigger the notify's after a task is done is found,
+# this'll have to do - we need to restart before the next task starts
+- name: Restart swift compute
+  shell: creates={{ swift_compute_restarted }}
+         service {{ item }} restart
+  with_items:
+    - rsync
+- name: Mark swift compute restarted
+  lineinfile: dest={{ swift_compute_restarted }}
+              line=done
+              state=present
+              create=yes
+

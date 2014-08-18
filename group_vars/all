@@ -159,3 +159,19 @@ lvm_conf_dir: "/etc/lvm"
 lvm_prefix: ".lvm"
 lvm_pvcreate: "{{ work_dir }}/{{ lvm_prefix }}_pvcreate"
 lvm_vgcreate: "{{ work_dir }}/{{ lvm_prefix }}_vgcreate"
+
+# swift stuff
+swift_conf_dir: "/etc/swift"
+swift_prefix: ".swift"
+swift_compute_restarted: "{{ work_dir }}/{{ swift_prefix }}_compute_restarted"
+swift_controller_restarted: "{{ work_dir }}/{{ swift_prefix }}_controller_restarted"
+swift_controller_proxy_restarted: "{{ work_dir }}/{{ swift_prefix }}_controller_proxy_restarted"
+
+swift_user_created: "{{ work_dir }}/{{ swift_prefix }}_user"
+swift_admin_role: "{{ work_dir }}/{{ swift_prefix }}_admin_role"
+swift_service_created: "{{ work_dir }}/{{ swift_prefix }}_service"
+swift_endpoint_created: "{{ work_dir }}/{{ swift_prefix }}_endpoint"
+
+swift_create_rings: "{{ work_dir }}/{{ swift_prefix }}_create_rings"
+swift_ring_entries: "{{ work_dir }}/{{ swift_prefix }}_ring_entries"
+swift_rebalance_rings: "{{ work_dir }}/{{ swift_prefix }}_rebalance_rings"

@@ -1,0 +1,8 @@
+---
+
+- name: restart swift controller proxy
+  service: name={{ item }} state=restarted
+  with_items:
+    - memcached
+    - swift-proxy
+

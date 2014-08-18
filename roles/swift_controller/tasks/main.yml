@@ -1,0 +1,2 @@
+---
+- include: swift_os_init.yml

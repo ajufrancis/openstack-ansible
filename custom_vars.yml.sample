@@ -39,6 +39,8 @@ heat_dbpass: HEAT_DBPASS
 heat_pass: HEAT_PASS
 ceilometer_dbpass: CEILOMETER_DBPASS
 ceilometer_pass: CEILOMETER_PASS
+swift_dbpass: SWIFT_DBPASS
+swift_pass: SWIFT_PASS
 trove_dbpass: TROVE_DBPASS
 trove_pass: TROVE_PASS
 
@@ -46,13 +48,19 @@ auth_region: regionOne
 
 keystone_admin_token: ADMIN_TOKEN
 metadata_secret: METADATA_SECRET
+swift_hash_path_prefix: ThiSisagOoDrAndOmsTrInG
+swift_hash_path_suffix: aNoTherrAnDOmsTRingtOuSE
 
 keypair_file: ~/.ssh/id_rsa.pub
 
-# get this by running pvdisplay on the compute node
+# cinder/swift config
+# get these by running 'pvdisplay' (and/or 'lshw -class disk') on the compute node
 compute1_root_volume_dev: sdb3
-# get this by running 'lshw -class disk' on the compute node
 compute1_cinder_volume_dev: sda
+compute1_swift_volume_dev: sdc
+compute1_swift_partition_power: 38
+compute1_swift_replicas: 2
+compute1_swift_move_restrict: 1
 
 # ansible stuff
 # remote_user is the login of the remote machines
