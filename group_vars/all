@@ -11,6 +11,7 @@
 # generic defaults
 ntp_server: "pool.ntp.org"
 work_dir: "/home/tesora/provision"
+fetch_dir: "remote_files"
 
 # individual network parameters
 controller_mgmt_ip: "{{ management_subnet }}.{{ controller_machine_ip }}"

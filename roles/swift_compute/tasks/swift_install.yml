@@ -8,6 +8,7 @@
     - swift-container
     - swift-object
     - xfsprogs
+  notify: restart swift compute
 
 # Once we have a dedicated disk, we should set it up with the following commands:
 #   fdisk /dev/sdb
@@ -20,12 +21,28 @@
 - name: Create swift storage directory
   file: dest=/srv/node/{{ compute1_swift_volume_dev }}1
         state=directory
+  notify: restart swift compute
+
+- name: Change permissions on swift storage directory
+  file: dest=/srv/node
+        state=directory
         owner=swift
         group=swift
         mode=0775
+        recurse=yes
+  notify: restart swift compute
+
+- name: Create home directory
+  file: dest=/home/swift
+        state=directory
+        owner=swift
+        group=swift
+        mode=0775
+  notify: restart swift compute
 
 - name: Create {{ conf_name2 }}
-  template: src={{ conf_name2 }}.j2 dest={{ conf_file2 }}
+  template: src={{ conf_name2 }}.j2 dest={{ conf_file2 }} owner=swift group=swift mode=0664
+  notify: restart swift compute
 
 - name: Enable rsync
   lineinfile: dest={{ item }}
@@ -44,6 +61,39 @@
         owner=swift
         group=swift
         mode=0775
+  notify: restart swift compute
+
+- name: Make sure default section exists in ring conf files
+  lineinfile: dest={{ item }}
+              regexp="^(\[default\]|\[DEFAULT\])$"
+              insertbefore=BOF
+              line=[DEFAULT]
+              backup=yes
+              create=yes
+  with_items:
+    - "{{ conf_file5 }}"
+    - "{{ conf_file6 }}"
+    - "{{ conf_file7 }}"
+  notify: restart swift compute
+
+- name: Configure 
+  ini_file: dest={{ item[0] }}
+            section=DEFAULT
+            option={{item[1].option}}
+            value={{item[1].value}}
+            backup=yes
+  with_nested:
+    - [
+      "{{ conf_file5 }}",
+      "{{ conf_file6 }}",
+      "{{ conf_file7 }}",
+      ]
+    - [
+      {option: mount_check, value: "false"},
+      {option: bind_ip, value: "0.0.0.0"},
+      #{option: bind_ip, value: "{{ inventory_hostname }}"},
+      ]
+  notify: restart swift compute
 
 # until a way to trigger the notify's after a task is done is found,
 # this'll have to do - we need to restart before the next task starts

@@ -2,10 +2,14 @@
 - name: Make sure we have a conf directory
   file: dest={{ conf_dir }}
         state=directory
-        owner={{ remote_user }}
-        group={{ remote_user }}
+        owner=swift
+        group=swift
         mode=0775
 
 - name: Configure hash
-  template: src={{ conf_name }}.j2 dest={{ conf_file }}
+  template: src={{ conf_name }}.j2
+            dest={{ conf_file }}
+            owner=swift
+            group=swift
+            mode=0664
 

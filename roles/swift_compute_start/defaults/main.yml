@@ -14,12 +14,6 @@ conf_file3: "/etc/default/{{ conf_name3 }}"
 conf_name4: proxy-server.conf
 conf_file4: "{{ conf_dir }}/{{ conf_name4 }}"
 
-conf_name5: account-server.conf
-conf_file5: "{{ conf_dir }}/{{ conf_name5 }}"
-
-conf_name6: container-server.conf
-conf_file6: "{{ conf_dir }}/{{ conf_name6 }}"
-
-conf_name7: object-server.conf
-conf_file7: "{{ conf_dir }}/{{ conf_name7 }}"
+conf_name5: memcached.conf
+conf_file5: "/etc/{{ conf_name5 }}"
 

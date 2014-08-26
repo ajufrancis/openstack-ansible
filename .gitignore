@@ -1,3 +1,4 @@
 *.swp
 *.log
 custom_vars.yml
+remote_files*

@@ -1,5 +1,17 @@
 ---
 
+- name: Push swift rings to compute
+  copy: src=../../../{{ fetch_dir }}/{{ controller_ext_ip }}/{{ conf_dir }}/{{ item }} dest={{ conf_dir }}/{{ item }} mode=0664
+  with_items:
+    - "account.ring.gz"
+    - "container.ring.gz"
+    - "object.ring.gz"
+  notify: restart swift compute start
+
+- name: Change permissions on {{ conf_dir }}
+  file: dest={{ conf_dir }} state=directory recurse=yes owner=swift group=swift
+  notify: restart swift compute start
+
 - name: Start swift services
   service: name={{ item }} state=started
   with_items:
